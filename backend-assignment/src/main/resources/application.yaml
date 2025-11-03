@@ -3,7 +3,7 @@ spring:
     name: backend-assignment
 
   datasource:
-    url: jdbc:mysql://localhost:3306/allra?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://localhost:3306/allra?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul
     username: root
     password: 9181
     driver-class-name: com.mysql.cj.jdbc.Driver
