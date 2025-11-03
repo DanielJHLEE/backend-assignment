@@ -1,3 +1,20 @@
 spring:
   application:
     name: backend-assignment
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/allra?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: 9181
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
