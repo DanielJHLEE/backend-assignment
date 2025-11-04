@@ -26,7 +26,7 @@ class UserServiceTest {
                 new UserEntity(2L, "박서준", "seo@example.com", null)
         ));
 
-        List<UserDto.Response> users = userService.findAll();
+        List<UserDto.UserResponseDto> users = userService.findAll();
 
         assertThat(users).hasSize(2);
         assertThat(users.get(0).getName()).isEqualTo("이재홍");
@@ -38,7 +38,7 @@ class UserServiceTest {
         when(userRepository.findById(1L))
                 .thenReturn(Optional.of(new UserEntity(1L, "이재홍", "jaehong@example.com", null)));
 
-        Optional<UserDto.Response> user = userService.findById(1L);
+        Optional<UserDto.UserResponseDto> user = userService.findById(1L);
         assertThat(user).isPresent();
         assertThat(user.get().getName()).isEqualTo("이재홍");
     }

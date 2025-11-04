@@ -21,22 +21,15 @@ public class UserController {
 
     // 전체 사용자 조회
     @GetMapping
-    public List<UserDto.Response> getAllUsers() {
-        return userService.findAll().stream()
-                .map(user -> UserDto.Response.builder()
-                        .id(user.getId())
-                        .name(user.getName())
-                        .email(user.getEmail())
-                        .createdAt(user.getCreatedAt())
-                        .build())
-                .toList();
+    public List<UserDto.UserResponseDto> getAllUsers() {
+        return userService.findAll(); // DTO로 이미 변환된 리스트 반환
     }
 
     // ID로 사용자 조회
     @GetMapping("/{id}")
-    public ResponseEntity<UserDto.Response> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserDto.UserResponseDto> getUserById(@PathVariable Long id) {
         return userService.findById(id)
-                .map(user -> ResponseEntity.ok().body(user))
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
