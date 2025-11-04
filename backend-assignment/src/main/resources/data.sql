@@ -33,5 +33,5 @@ INSERT INTO product (name, brand, category, price, stock, sold_out, created_at) 
 -- 🍜 식품
 ('진라면 매운맛', '오뚜기', '식품', 4500, 100, FALSE, NOW()),
 ('삼다수 2L', '제주개발공사', '식품', 1200, 300, FALSE, NOW()),
-('허니버터칩', '해태', '식품', 1800, 0, TRUE, NOW());
+('허니버터칩', '해태', '식품', 1800, 0, TRUE, NOW()),
 ('비비고 왕교자', 'CJ제일제당', '식품', 7980, 200, FALSE, NOW());
