@@ -4,17 +4,21 @@ spring:
 
   datasource:
     url: jdbc:mysql://localhost:3306/allra?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul
-    username: root
-    password: 9181
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:9181}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
+    defer-datasource-initialization: true # 데이터 초기화 시점 조정 (스키마 생성 후 데이터 삽입)
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+  sql: 
+    init:
+      mode: always # 앱 실행 시 data.sql 항상 실행
 
 server:
   port: 8080
