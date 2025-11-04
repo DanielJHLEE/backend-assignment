@@ -18,25 +18,15 @@ public class UserService {
     }
 
     // 전체 사용자 조회
-    public List<UserDto.Response> findAll() {
+    public List<UserDto.UserResponseDto> findAll() {
         return userRepository.findAll().stream()
-                .map(user -> UserDto.Response.builder()
-                        .id(user.getId())
-                        .name(user.getName())
-                        .email(user.getEmail())
-                        .createdAt(user.getCreatedAt())
-                        .build())
+                .map(UserDto.UserResponseDto::fromEntity) // 변환 메서드 사용
                 .toList();
     }
 
     // ID로 사용자 조회
-    public Optional<UserDto.Response> findById(Long id) {
+    public Optional<UserDto.UserResponseDto> findById(Long id) {
         return userRepository.findById(id)
-                .map(user -> UserDto.Response.builder()
-                        .id(user.getId())
-                        .name(user.getName())
-                        .email(user.getEmail())
-                        .createdAt(user.getCreatedAt())
-                        .build());
+                .map(UserDto.UserResponseDto::fromEntity);
     }
 }
