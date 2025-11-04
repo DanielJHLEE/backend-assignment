@@ -37,7 +37,9 @@
   - 기본 DB 계정: `root` / `9181` (샘플값 — 실제 환경에서는 변경부탁드립니다)
   - JPA: `hibernate.ddl-auto: update` (스키마 자동 반영)
   - SQL 초기화: `spring.sql.init.mode: always` (앱 실행 시 `data.sql`이 항상 실행됩니다)
-- 초기 데이터: Spring Boot실행시 `data.sql` (샘플 유저(USER) 데이터 삽입)
+- 초기 데이터
+  - Spring Boot실행시 `data.sql` (샘플 유저(USER) 데이터 삽입(5명))
+  - Spring Boot실행시 `data.sql` (샘플 유저(PRODUCT) 데이터 삽입(16개))
 - 유저(USER)테스트 데이터 관리:
   - UserControllerTest에서 JUnit 테스트는 기존 USER데이터를 정리 후 @BeforeEach로 테스트 데이터를 삽입하고,
     @AfterEach로 userRepository.deleteAll()을 실행하여 테스트 종료 후 USER테이블 데이터를 자동 정리합니다.
