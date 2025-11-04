@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 public class UserDto {
 
-   // 🟢 사용자 List/Detail 응답용DTO
+   // 사용자 List/Detail 응답용DTO
     @Data
     @Builder
     @AllArgsConstructor
