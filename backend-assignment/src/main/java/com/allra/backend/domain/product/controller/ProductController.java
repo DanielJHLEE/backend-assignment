@@ -19,6 +19,9 @@ import com.allra.backend.global.dto.PageResponseDto;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Product Controller
+ */
 @RestController
 @RequestMapping("/products")
 @RequiredArgsConstructor
@@ -38,11 +41,8 @@ public class ProductController {
             @RequestParam(required = false) Integer minPrice,// 가격 하한
             @RequestParam(required = false) Integer maxPrice // 가격 상한
     ) {
-        // PageRequest는 내부적으로 0부터 시작 -1 보정
-        int adjustedPage = (page <= 0) ? 0 : page - 1;
-
         Page<ProductDto.ProductResponseDto> products = 
-            productService.getAllProducts(adjustedPage, size, category, name, minPrice, maxPrice);
+            productService.getAllProducts(page, size, category, name, minPrice, maxPrice);
 
         return ApiResponseDto.success(HttpStatus.OK.getReasonPhrase(), PageResponseDto.from(products));
     }

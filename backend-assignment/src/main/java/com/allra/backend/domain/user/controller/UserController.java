@@ -12,6 +12,9 @@ import com.allra.backend.global.dto.ApiResponseDto;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * User Controller
+ */
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor

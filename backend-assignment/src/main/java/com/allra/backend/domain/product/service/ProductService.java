@@ -11,6 +11,9 @@ import com.allra.backend.domain.product.repository.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Product Service
+ */
 @Service
 @RequiredArgsConstructor
 public class ProductService {
@@ -23,10 +26,10 @@ public class ProductService {
     public Page<ProductDto.ProductResponseDto> getAllProducts(
             int page, int size, String category, String name, Integer minPrice, Integer maxPrice) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<ProductEntity> products = productRepository.findAll(pageable); // 기본 페이징 조회
+        Pageable pageable = PageRequest.of(page <= 0 ? 0 : page - 1, size);
 
-        // TODO: 추후 QueryDSL로 카테고리, 이름, 가격 조건 필터링 확장 가능
+        Page<ProductEntity> products = productRepository.searchProducts(category, name, minPrice, maxPrice, pageable);
+
         return products.map(ProductDto.ProductResponseDto::fromEntity);
     }
 
