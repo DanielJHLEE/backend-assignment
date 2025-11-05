@@ -38,8 +38,12 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
+	// ✅ 테스트 관련
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// ✅ (추가) H2 — in-memory DB for @DataJpaTest
+	testImplementation 'com.h2database:h2'
 }
 
 def querydslDir = "$buildDir/generated/querydsl"
