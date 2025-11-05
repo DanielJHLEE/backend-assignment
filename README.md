@@ -26,7 +26,7 @@
 - IDE: **IntelliJ IDEA / VS Code**  
   - Lombok 플러그인 활성화  
   - Annotation Processing ON  
-- DB: **MySQL 8.x 이상 (로컬 또는 Docker)**  
+- DB: **MySQL 8.x 이상**  
 - 빌드 도구: **Gradle Wrapper (`gradlew`, `gradlew.bat`)** — 별도 설치 불필요
 
 ---
