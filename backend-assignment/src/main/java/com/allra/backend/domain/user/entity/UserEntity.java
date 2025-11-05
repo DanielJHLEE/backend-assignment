@@ -5,7 +5,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user")
+@Table(name = "`user`") // DB MYSQL user는 예약어이므로 백틱 처리로 테이블명시
 @Getter
 @Setter
 @NoArgsConstructor
