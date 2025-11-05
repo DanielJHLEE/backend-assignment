@@ -126,6 +126,105 @@ export DB_PASSWORD=9181
 
 💡 환경변수가 없을 경우, ${DB_USERNAME:root}, ${DB_PASSWORD:9181} 기본값이 자동 적용됩니다.
 
+---
+
+## 공통 API 응답 및 페이징 처리 설계
+본 프로젝트는 API 일관성과 유지보수성을 높이기 위해
+공통 응답 Wrapper(ApiResponse) 및 페이징 전용 Wrapper(PageResponse) 구조를 적용했습니다.
+
+🔹 ApiResponse (공통 응답 포맷)
+모든 API 응답은 아래와 같은 공통 구조를 따릅니다.
+
+{
+  "status": 200,
+  "message": "요청이 성공적으로 처리되었습니다.",
+  "data": { ... }
+}
+
+필드	설명
+1. status	HTTP 상태 코드 (예: 200, 404, 400 등)
+2. message	처리 결과 메시지
+3. data	실제 응답 데이터
+
+설계 의도:
+
+응답 형식을 통일하여 클라이언트에서 일관성 있는 응답 처리가 가능
+성공(success), 실패(fail), 리소스 없음(notFound) 등
+주요 HTTP 상태별로 정적 팩토리 메서드 제공
+
+예:
+return ApiResponse.success("상품 목록 조회 성공", data);
+return ApiResponse.fail(HttpStatus.BAD_REQUEST, "잘못된 요청입니다.");
+
+🔹 PageResponse (페이징 처리 구조)
+상품 목록 등 페이징이 필요한 API는 PageResponse<T> 클래스를 통해 응답합니다.
+Spring Data JPA의 Page<T> 객체를 감싸 아래와 같이 직관적인 구조로 반환합니다.
+
+{
+  "row": [ { ... }, { ... } ],
+  "pageInfo": {
+    "page": 1,
+    "size": 10,
+    "totalElements": 45,
+    "totalPages": 5,
+    "last": false
+  }
+}
+
+필드	설명
+1. row	실제 데이터 목록
+2. pageInfo.page	현재 페이지 번호 (1부터 시작)
+3. pageInfo.size	페이지 크기
+4. pageInfo.totalElements	전체 데이터 개수
+5. pageInfo.totalPages	전체 페이지 수
+6. pageInfo.last	마지막 페이지 여부
+
+* 설계 포인트:
+PageRequest는 0부터 시작하므로 컨트롤러에서 (page <= 0) ? 0 : page - 1로 보정 처리
+응답에서는 page.getNumber() + 1 로 1부터 시작하는 사용자 기준 페이지 번호로 표시
+PageResponse를 공통으로 사용하여 페이징 응답 구조의 일관성을 유지
+
+🔹 예시: /products API 응답 구조
+{
+  "status": 200,
+  "message": "상품 목록 조회 성공",
+  "data": {
+    "row": [
+      {
+        "id": 101,
+        "name": "에어맥스 270",
+        "brand": "나이키",
+        "category": "신발",
+        "price": 159000,
+        "stock": 15,
+        "soldOut": false,
+        "createdAt": "2025-11-05T13:08:21"
+      }
+    ],
+    "pageInfo": {
+      "page": 1,
+      "size": 10,
+      "totalElements": 16,
+      "totalPages": 2,
+      "last": false
+    }
+  }
+}
+
+🔹 설계 요약
+계층	역할
+1. Controller	요청 파라미터 보정(page - 1), 응답 래핑(ApiResponse.success)
+2. Service	비즈니스 로직 수행 및 DTO 변환
+3. Repository	JPA를 통한 DB 액세스
+4. Global DTO	ApiResponse, PageResponse를 통한 통합 응답 구조 관리
+
+💬 참고: 본 프로젝트는 단순한 서비스 계층 로직을 위해 별도의 `ServiceImpl` 구현체를 두지 않고,  
+> 인터페이스 없이 `@Service` 클래스로 직접 구성했습니다.  
+> 이는 과제 규모상 불필요한 계층 분리를 피하고 코드 가독성을 높이기 위한 설계 선택입니다.
+
+이 구조를 통해 API 일관성과 확장성을 확보했으며,
+심사 환경에서도 직관적인 응답 확인이 가능하도록 설계되었습니다.
+
 ## QueryDSL / 코드 생성
 - `build.gradle`에 QueryDSL 설정이 되어 있어 빌드 시 `build/generated/querydsl`에 소스가 생성됩니다. IDE에서 해당 폴더를 소스 루트로 등록하면 됩니다.
 
@@ -137,7 +236,7 @@ export DB_PASSWORD=9181
 - JDK 버전 문제: Gradle toolchain은 Java 21을 요구합니다. 설치된 Java 버전을 확인하거나 `JAVA_HOME`을 Java 21로 맞추세요.
 - Lombok 관련 에러: IDE 플러그인 설치 및 annotation processor 활성화를 확인하세요.
 
-## 요약
+## 프로젝트 환경 요약
 - 이 프로젝트는 Visual Studio Code / Spring Boot + Java 21 기반의 Gradle 프로젝트입니다. 로컬 환경(Windows 11)에서는 PowerShell을 사용해 `gradlew.bat`로 빌드/테스트/실행하시면 됩니다. MySQL을 준비하고 `application.yaml`의 접속 정보를 필요에 따라 변경해 주세요.
 
 --------------------------------------------------------------------------------------------
