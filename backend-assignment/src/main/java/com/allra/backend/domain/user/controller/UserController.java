@@ -2,15 +2,15 @@ package com.allra.backend.domain.user.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.allra.backend.domain.user.service.UserService;
-
 import com.allra.backend.domain.user.dto.UserDto;
+import com.allra.backend.domain.user.service.UserService;
+import com.allra.backend.global.dto.ApiResponseDto;
 
 import lombok.RequiredArgsConstructor;
-
 
 @RestController
 @RequestMapping("/users")
@@ -21,16 +21,20 @@ public class UserController {
 
     // 전체 사용자 조회
     @GetMapping
-    public List<UserDto.UserResponseDto> getAllUsers() {
-        return userService.findAll(); // DTO로 이미 변환된 리스트 반환
+    public ApiResponseDto<List<UserDto.UserResponseDto>> getAllUsers() {
+        List<UserDto.UserResponseDto> users = userService.findAll();
+        return ApiResponseDto.success(HttpStatus.OK.getReasonPhrase(), users);
     }
 
     // ID로 사용자 조회
     @GetMapping("/{id}")
-    public ResponseEntity<UserDto.UserResponseDto> getUserById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponseDto<UserDto.UserResponseDto>> getUserById(@PathVariable Long id) {
         return userService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(user -> ResponseEntity.ok(
+                        ApiResponseDto.success(HttpStatus.OK.getReasonPhrase(), user)
+                ))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponseDto.fail(HttpStatus.NOT_FOUND.getReasonPhrase())));
     }
 
 }
