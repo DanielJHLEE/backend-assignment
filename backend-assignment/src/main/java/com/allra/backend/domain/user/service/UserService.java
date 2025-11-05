@@ -8,14 +8,13 @@ import org.springframework.stereotype.Service;
 import com.allra.backend.domain.user.dto.UserDto;
 import com.allra.backend.domain.user.repository.UserRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
-
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     // 전체 사용자 조회
     public List<UserDto.UserResponseDto> findAll() {
