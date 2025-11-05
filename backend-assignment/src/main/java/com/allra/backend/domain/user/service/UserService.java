@@ -10,6 +10,9 @@ import com.allra.backend.domain.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * User Service
+ */
 @Service
 @RequiredArgsConstructor
 public class UserService {
