@@ -1,10 +1,12 @@
 package com.allra.backend.domain.cart.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
-
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import com.allra.backend.domain.cart.dto.CartDto;
 import com.allra.backend.domain.cart.service.CartService;
 import com.allra.backend.global.dto.ApiResponseDto;
@@ -51,12 +53,17 @@ public class CartController {
      * - 장바구니 안의 특정 상품만 조회
      */
     @GetMapping("/{cartId}/items/{cartItemId}")
-    public ApiResponseDto<CartDto.CartItemsDetailResponseDto> getCartItemDetail(
+    public ResponseEntity<ApiResponseDto<CartDto.CartItemsDetailResponseDto>> getCartItemDetail(
             @PathVariable Long userId,
             @PathVariable Long cartId,
             @PathVariable Long cartItemId) {
-        CartDto.CartItemsDetailResponseDto cartItemDetail = cartService.getCartItemDetail(userId, cartId, cartItemId);
-        return ApiResponseDto.success(HttpStatus.OK.getReasonPhrase(), cartItemDetail);
+
+        return Optional.ofNullable(cartService.getCartItemDetail(userId, cartId, cartItemId))
+                .map(cartItemDetail -> ResponseEntity.ok(
+                        ApiResponseDto.success(HttpStatus.OK.getReasonPhrase(), cartItemDetail)
+                ))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponseDto.fail(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.getReasonPhrase())));
     }
 
 

@@ -54,8 +54,8 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponseDto<ProductDto.ProductResponseDto>> getProductById(@PathVariable Long id) {
         return productService.getProductById(id)
-                .map(user -> ResponseEntity.ok(
-                        ApiResponseDto.success(HttpStatus.OK.getReasonPhrase(), user)
+                .map(product -> ResponseEntity.ok(
+                        ApiResponseDto.success(HttpStatus.OK.getReasonPhrase(), product)
                 ))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponseDto.fail(HttpStatus.NOT_FOUND.getReasonPhrase())));
