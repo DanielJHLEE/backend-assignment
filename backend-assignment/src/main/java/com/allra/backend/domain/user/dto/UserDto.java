@@ -7,6 +7,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * UserDto
+ * 사용자 관련 DTO 클래스
+ */
 public class UserDto {
 
     // 사용자 List/Detail 응답용DTO
