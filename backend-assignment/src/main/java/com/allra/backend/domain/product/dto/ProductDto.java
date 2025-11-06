@@ -7,6 +7,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * ProductDto
+ * 상품 관련 DTO 클래스
+ */
 public class ProductDto {
 
     // 상품 List/Detail 응답용DTO
