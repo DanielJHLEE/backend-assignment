@@ -56,7 +56,7 @@ class ProductControllerTest {
                 .thenReturn(mockPage);
 
         // when & then
-        mockMvc.perform(get("/products")
+        mockMvc.perform(get("/api/products")
                         .param("page", "1")   // 내부에서 0으로 조정되므로 1로 보내야 맞음
                         .param("size", "10"))
                 .andExpect(status().isOk())
@@ -85,7 +85,7 @@ class ProductControllerTest {
 
         when(productService.getProductById(1L)).thenReturn(Optional.of(dummy));
 
-        mockMvc.perform(get("/products/1"))
+        mockMvc.perform(get("/api/products/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(1))
                 .andExpect(jsonPath("$.data.name").value("테스트상품"))
@@ -97,7 +97,7 @@ class ProductControllerTest {
     void getProductById_shouldReturn404_whenNotFound() throws Exception {
         when(productService.getProductById(999L)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/products/999"))
+        mockMvc.perform(get("/api/products/999"))
                 .andExpect(status().isNotFound());
     }
 

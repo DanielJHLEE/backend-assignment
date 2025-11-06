@@ -36,7 +36,7 @@ class UserControllerTest {
     @Test
     @DisplayName("전체 유저 목록 조회 테스트")
     void getAllUsers() throws Exception {
-        mockMvc.perform(get("/users"))
+        mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
                 // 기존: $.length() → 수정: $.data.length()
                 .andExpect(jsonPath("$.data.length()").value(2))
@@ -48,7 +48,7 @@ class UserControllerTest {
     void getUserById() throws Exception {
         Long id = userRepository.findAll().get(0).getId();
 
-        mockMvc.perform(get("/users/" + id))
+        mockMvc.perform(get("/api/users/" + id))
                 .andExpect(status().isOk())
                 // 기존: $.name → 수정: $.data.name
                 .andExpect(jsonPath("$.data.name").value("이재홍"));

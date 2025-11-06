@@ -80,6 +80,10 @@ Git Bash 관련 요점
 명령 예 (Git Bash / Bash)
 
 ```bash
+# Gradle 빌드
+./gradlew clean build
+./gradlew clean build -x test
+
 # 테스트 실행
 ./gradlew test
 
