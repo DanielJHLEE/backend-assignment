@@ -5,7 +5,10 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.allra.backend.domain.cart.dto.CartDto;
 import com.allra.backend.domain.cart.service.CartService;
@@ -41,11 +44,19 @@ public class CartController {
      * - 해당 장바구니에 담긴 모든 상품 목록 조회
      */
     @GetMapping("/{cartId}")
-    public ApiResponseDto<List<CartDto.CartsIdDetailResponseDto>> getCartsDetail(
+    public ResponseEntity<ApiResponseDto<List<CartDto.CartsIdDetailResponseDto>>> getCartsDetail(
             @PathVariable Long userId,
             @PathVariable Long cartId) {
+
         List<CartDto.CartsIdDetailResponseDto> cartDetails = cartService.getCartsDetailByCartId(userId, cartId);
-        return ApiResponseDto.success(HttpStatus.OK.getReasonPhrase(), cartDetails);
+
+        return Optional.ofNullable(cartDetails)
+                .filter(list -> !list.isEmpty()) // 비어있지 않으면 OK
+                .map(list -> ResponseEntity.ok(
+                        ApiResponseDto.success(HttpStatus.OK.getReasonPhrase(), list)
+                ))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponseDto.fail(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.getReasonPhrase())));
     }
 
     /**

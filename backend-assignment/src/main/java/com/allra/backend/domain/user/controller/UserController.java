@@ -38,7 +38,7 @@ public class UserController {
                         ApiResponseDto.success(HttpStatus.OK.getReasonPhrase(), user)
                 ))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponseDto.fail(HttpStatus.NOT_FOUND.getReasonPhrase())));
+                        .body(ApiResponseDto.fail(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.getReasonPhrase())));
     }
 
 }

@@ -54,6 +54,16 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.data.name").value("이재홍"));
     }
 
+    @Test
+    @DisplayName("존재하지 않는 유저 ID 조회 시 404 반환")
+    void getUserById_NotFound() throws Exception {
+        mockMvc.perform(get("/api/users/99999")) // 존재하지 않는 ID
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value("Not Found"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+    }
+
     @AfterEach
     void cleanUp() {
         userRepository.deleteAll(); // 테스트 후 데이터 정리

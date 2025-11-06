@@ -140,7 +140,7 @@ public class CartDto {
                     .price(product.getPrice())
                     .quantity(item.getQuantity())
                     .soldOut(Boolean.TRUE.equals(product.getSoldOut()))
-                    .createdAt(cart.getCreatedAt())
+                    .createdAt(cart != null ? cart.getCreatedAt() : null)
                     .build();
         }
     }
