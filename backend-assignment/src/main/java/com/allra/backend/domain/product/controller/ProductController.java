@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Product Controller
+ * 상품 관련 API를 처리하는 컨트롤러 클래스
  */
 @RestController
 @RequestMapping("/api/products")

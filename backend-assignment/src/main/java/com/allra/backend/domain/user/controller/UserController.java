@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * User Controller
+ * 사용자 관련 API를 처리하는 컨트롤러 클래스
  */
 @RestController
 @RequestMapping("/api/users")

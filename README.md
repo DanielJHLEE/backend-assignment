@@ -243,14 +243,14 @@ PageResponse를 공통으로 사용하여 페이징 응답 구조의 일관성�
 ## 상품 조회(PRODUCT) API 사용 예시
 | 기능 | 요청 예시 |
 |------|------------|
-| 전체 목록 조회 | `GET /products?page=1&size=10` |
-| 카테고리 검색 | `GET /products?category=전자제품&page=1&size=10` |
-| 상품명 검색 | `GET /products?name=그램&page=1&size=10` |
-| 가격 범위 검색 | `GET /products?minPrice=1000&maxPrice=50000&page=1&size=10` |
-| 상세 조회 | `GET /products/{id}` |
+| 전체 목록 조회 | `GET /api/products?page=1&size=10` |
+| 카테고리 검색 | `GET /api/products?category=전자제품&page=1&size=10` |
+| 상품명 검색 | `GET /api/products?name=그램&page=1&size=10` |
+| 가격 범위 검색 | `GET /api/products?minPrice=1000&maxPrice=50000&page=1&size=10` |
+| 상세 조회 | `GET /api/products/{id}` |
 
 > ※ `category(카테고리)`, `name(상품명)`, `minPrice(최소금액)`, `maxPrice(최대금액)` 파라미터는 선택적으로 조합하여 검색할 수 있습니다.
-> (예: `/products?category=전자제품&name=LG&minPrice=100000&page=1&size=5`)
+> (예: `/api/products?category=전자제품&name=LG&minPrice=100000&page=1&size=5`)
 
 ## 프로젝트 환경 요약
 - 이 프로젝트는 Visual Studio Code / Spring Boot + Java 21 기반의 Gradle 프로젝트입니다. 로컬 환경(Windows 11)에서는 PowerShell을 사용해 `gradlew.bat`로 빌드/테스트/실행하시면 됩니다. MySQL을 준비하고 `application.yaml`의 접속 정보를 필요에 따라 변경해 주세요.
