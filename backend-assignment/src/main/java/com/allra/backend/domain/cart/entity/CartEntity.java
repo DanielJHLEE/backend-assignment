@@ -49,6 +49,7 @@ public class CartEntity {
     // 장바구니에 포함된 아이템 목록 (1:N)
     // 장바구니 한 개에 여러 개의 아이템이 포함될 수 있음
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true) 
+    @Builder.Default
     private List<CartItemEntity> items = new ArrayList<>();
 
     @PrePersist
