@@ -306,6 +306,7 @@ spring:
       mode: always
   jpa:
     defer-datasource-initialization: true
+```
 
 #### Q: User 테이블에 이미 데이터가 있는데 data.sql이 다시 실행되면 중복 오류가 납니다. 어떻게 방지하나요?
 **A:**
@@ -422,7 +423,7 @@ DB 데이터 `"아이폰 15 프로"`와 매칭되지 않음.
 
 ### Q: 최종적으로 테스트 코드는 이렇게 수정하면 되나요?
 **A:** 맞음. 아래 구조가 Repository 로직과 완전히 일치하는 최적의 테스트다.  
-```java
+
 Page<ProductEntity> result = productRepository.searchProducts(
     "전자제품", "아이폰15", 1000000, 1600000, PageRequest.of(0, 10)
 );
