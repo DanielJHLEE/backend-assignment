@@ -191,7 +191,6 @@ PageRequest는 0부터 시작하므로 컨트롤러에서 (page <= 0) ? 0 : page
 응답에서는 page.getNumber() + 1 로 1부터 시작하는 사용자 기준 페이지 번호로 표시
 PageResponse를 공통으로 사용하여 페이징 응답 구조의 일관성을 유지
 
-```markdown
 🔹 예시: /products API 응답 구조
 ```json
 {
@@ -307,6 +306,8 @@ spring:
       mode: always
   jpa:
     defer-datasource-initialization: true
+
+```markdown
 ```
 
 #### Q: User 테이블에 이미 데이터가 있는데 data.sql이 다시 실행되면 중복 오류가 납니다. 어떻게 방지하나요?
