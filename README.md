@@ -218,7 +218,7 @@ PageResponse를 공통으로 사용하여 페이징 응답 구조의 일관성�
     }
   }
 }
-
+```
 
 🔹 설계 요약
 계층	역할
@@ -306,9 +306,6 @@ spring:
       mode: always
   jpa:
     defer-datasource-initialization: true
-
-```markdown
-```
 
 #### Q: User 테이블에 이미 데이터가 있는데 data.sql이 다시 실행되면 중복 오류가 납니다. 어떻게 방지하나요?
 **A:**
