@@ -6,6 +6,11 @@
 이 저장소는 **올라(Allra) 핀테크 백엔드 과제**를 위해 개발된 **Spring Boot 기반 API 서버**입니다.  
 요구된 기능은 RESTful 방식으로 구현되었으며, 계층별 구조(Controller–Service–Repository)와 테스트 코드가 포함되어 있습니다.
 
+## ⚙️ 프로젝트 구조 정리
+- Spring Boot 루트 기반 빌드 구조 (`build.gradle`, `settings.gradle` 루트 위치)
+- Gradle Wrapper(`gradlew`)로 버전 고정 빌드 및 실행
+- Render 배포 환경 자동 인식 및 빌드 검증 완료
+
 ## ⚙️ 주요 기술 스택
 | 구분 | 내용 |
 |------|------|
@@ -66,10 +71,7 @@ PowerShell 예:
 # 빌드된 JAR 실행
 java -jar .\build\libs\backend-assignment-0.0.1-SNAPSHOT.jar
 ```
-
-참고: Git Bash 또는 WSL을 사용하는 경우 `./gradlew` 명령을 사용해도 됩니다.
-
----
+* 참고: Git Bash 또는 WSL을 사용하는 경우 `./gradlew` 명령을 사용해도 됩니다.
 
 Git Bash 관련 요점
 
@@ -79,7 +81,7 @@ Git Bash 관련 요점
 
 명령 예 (Git Bash / Bash)
 
-```bash
+``` bash
 # Gradle 빌드
 ./gradlew clean build
 ./gradlew clean build -x test
@@ -95,6 +97,7 @@ Git Bash 관련 요점
 
 # 빌드된 JAR 실행
 java -jar build/libs/backend-assignment-0.0.1-SNAPSHOT.jar
+
 ```
 
 ## 데이터베이스 설정
