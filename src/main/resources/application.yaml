@@ -27,3 +27,13 @@ server:
       charset: UTF-8
       enabled: true
       force: true
+
+springdoc:
+  swagger-ui:
+    tags-sorter: none       # 태그 정렬 비활성화 (수동 순서 유지)
+    operations-sorter: none # 엔드포인트 정렬 비활성화 (선언 순서 유지)
+    disable-swagger-default-url: true  # Swagger 기본 URL 비활성화
+  api-docs:
+    path: /v3/api-docs       # OpenAPI 문서 기본 경로 (기본값이지만 명시적으로 유지)
+
+

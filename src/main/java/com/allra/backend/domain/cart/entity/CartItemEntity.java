@@ -41,7 +41,7 @@ public class CartItemEntity {
     @JoinColumn(name = "product_id", nullable = false)
     private ProductEntity product;
 
-    // ✅ 수량
+    // 수량
     @Column(nullable = false)
     private int quantity;
 }
