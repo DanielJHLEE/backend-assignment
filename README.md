@@ -192,6 +192,7 @@ PageRequest는 0부터 시작하므로 컨트롤러에서 (page <= 0) ? 0 : page
 PageResponse를 공통으로 사용하여 페이징 응답 구조의 일관성을 유지
 
 🔹 예시: /products API 응답 구조
+```json
 {
   "status": 200,
   "message": "상품 목록 조회 성공",
@@ -217,6 +218,7 @@ PageResponse를 공통으로 사용하여 페이징 응답 구조의 일관성�
     }
   }
 }
+
 
 🔹 설계 요약
 계층	역할
