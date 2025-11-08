@@ -266,69 +266,71 @@ PageResponse를 공통으로 사용하여 페이징 응답 구조의 일관성�
 
 --------------------------------------------------------------------------------------------
 
-## USER테이블 유저 목록 API 기능 구현 당시 AI 도움기록
+## USER API 기능 구현 당시 AI 도움기록
 ### 해결하려던 문제
-Spring Boot 기반의 올라 핀테크 과제 프로젝트에서 `User` 도메인의 CRUD 중
-**유저 목록 조회(List)** 와 **상세 조회(Detail)** 기능을 구현하기 위해,
-Controller → Service → Repository 계층 구조를 설계하고
-더미 데이터, 엔티티 매핑, 테스트 코드(JUnit/Mockito)를 포함한 전체 구현을 진행함.
+Spring Boot 환경에서 `UserRepository`, `UserService`, `UserController` 계층을 구성하고  
+전체 사용자 조회, 단일 사용자 조회 API를 구현하는 과정에서  
+데이터 초기화, Optional 처리, Swagger 문서화 관련 문제를 해결하고자 함.
+
+---
 
 ### 대화 요약
 
-#### Q: `User` 기능을 구현할 때 Controller, Service, Repository 구조는 어떻게 나누는 게 좋은가요?
-**A:**
-Spring의 Layered Architecture 원칙에 따라 3계층으로 나누는 것이 적절합니다.
-- Controller: API 요청 및 응답 처리
-- Service: 비즈니스 로직 수행
-- Repository: DB 접근 (JPA 사용)
+**Q:** findAll()로 사용자 목록을 조회할 때 반환 타입은 List로 해도 되나요?  
+**A:** 맞음. 단, API 응답에서는 `ApiResponseDto<List<UserResponseDto>>` 형태로 감싸  
+일관된 구조를 유지하도록 제안함.
 
-#### Q: `UserService` 없이 Controller에서 Repository를 바로 호출해도 될까요?
-**A:**
-작은 규모의 기능이라도 Service 계층을 두는 것이 바람직합니다.
-Controller는 요청 흐름만 담당하고, 로직(조회, 변환 등)은 Service에서 처리해야
-유지보수성과 테스트 효율이 높아집니다.
+---
 
-#### Q: `UserDto`는 어떻게 구성하는 게 좋을까요? Request/Response를 분리해야 하나요?
-**A:**
-회원가입은 없고 조회만 있으므로 `UserDto.Response`만 사용해도 충분합니다.
-필드는 `id`, `name`, `email`, `createdAt` 중심으로 구성하고
-Lombok의 `@Builder`로 매핑을 간결하게 유지합니다.
+**Q:** 단일 사용자 조회 시 존재하지 않으면 예외를 던질까요, null 반환이 나을까요?  
+**A:** 비즈니스 예외(`BusinessException`)로 처리하는 것이 REST 표준에 맞음.  
+→ `userRepository.findById(id).orElseThrow(...)` 형태로 수정.
 
-#### Q: 더미 데이터를 자동으로 삽입하려면 어떻게 설정하나요?
-**A:**
-`data.sql` 파일을 `src/main/resources` 하위에 생성하고,
-`application.yml`에 아래 설정을 추가합니다:
+---
 
-```yaml
-spring:
-  sql:
-    init:
-      mode: always
-  jpa:
-    defer-datasource-initialization: true
-```
+**Q:** 더미 유저 데이터를 초기화하려면 data.sql을 써도 되나요?  
+**A:** 가능함. 단, `spring.sql.init.mode=always`와 `ddl-auto=create`를 함께 설정해야  
+애플리케이션 시작 시점에 데이터가 삽입됨.
 
-#### Q: User 테이블에 이미 데이터가 있는데 data.sql이 다시 실행되면 중복 오류가 납니다. 어떻게 방지하나요?
-**A:**
-테이블 초기화가 필요하지 않다면 spring.sql.init.mode=embedded로 변경하거나,
-SQL에 INSERT IGNORE 구문을 사용하여 중복 삽입을 방지합니다.
-또는 테스트 개발 단계에서는 deleteAll() 후 재삽입 로직을 테스트 전 단계에서 수행할 수 있습니다.
+---
 
-### Q: Controller와 Service 테스트는 각각 어떤 차이가 있나요?
-**A:**
-Service 테스트: 실제 DB 없이 로직만 검증 (@Test + Mockito.mock())
+**Q:** Swagger에서 사용자 API를 한 그룹으로 묶고 싶습니다.  
+**A:** `@Tag(name = SwaggerTags.USER_NAME, description = SwaggerTags.USER_DESC)`  
+로 설정하면 Swagger UI에서 “👤 사용자 API” 그룹으로 표시됨.
 
-Controller 테스트: 실제 API 요청을 검증 (@SpringBootTest + MockMvc)
-Service는 비즈니스 로직 단위 테스트,
-Controller는 엔드포인트 단위 통합 테스트로 구분됩니다.
+---
 
-### Q: MockMvc를 쓰면 가짜(Mock) 객체로 테스트하는 건가요?
-**A:**
-1. UserServiceTest: JUnit + Mockito를 사용한 단위 테스트
-findAll() 및 findById() 로직 검증
+**Q:** Optional이 비어 있을 때 404 응답을 주려면 어떻게 하나요?  
+**A:** `Optional.map(...).orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)... )`  
+패턴으로 처리하거나, Service 단에서 예외를 던져 ControllerAdvice에서 처리하도록 제안함.
 
-2. UserControllerTest: SpringBootTest + MockMvc 통합 테스트
-/users, /users/{id} API 응답 상태 및 JSON 구조 검증
+---
+
+**Q:** `User`라는 테이블명이 충돌납니다.  
+**A:** `@Table(name = "users")`로 변경하거나, H2 DB 실행 시 `MODE=MySQL` 설정을 추가하라고 안내함.
+
+---
+
+**Q:** H2 DB로 테스트 시 한글 데이터가 깨집니다.  
+**A:** `spring.datasource.url`에 `characterEncoding=UTF-8`과  
+`serverTimezone=Asia/Seoul` 옵션을 추가하도록 안내함.
+
+---
+
+### 최종 적용 결과
+- `GET /api/users` → 전체 사용자 목록 조회  
+- `GET /api/users/{id}` → 단일 사용자 조회 (404 예외 처리 포함)  
+- Swagger 그룹화 및 응답 DTO 일원화  
+- 더미 데이터 자동 삽입(data.sql) 정상 작동  
+
+---
+
+✔️ **AI 사용 목적:** Controller·Service 설계, 예외 처리 구조 정리, Swagger 문서화  
+✔️ **활용 범위:** 계층 간 역할 분리, DTO 변환 로직, 예외처리 설계  
+✔️ **대표 프롬프트 예시:**  
+- “Optional이 비어 있으면 어떤 응답을 주는 게 좋을까?”  
+- “Swagger 그룹은 어떻게 나누는 게 맞을까?”  
+- “User 테이블명 충돌을 해결하려면 어떻게 해야 해?”
 
 --------------------------------------------------------------------------------------------
 
