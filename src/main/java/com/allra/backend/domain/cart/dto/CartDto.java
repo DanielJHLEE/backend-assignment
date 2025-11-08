@@ -8,6 +8,8 @@ import com.allra.backend.domain.cart.entity.CartEntity;
 import com.allra.backend.domain.cart.entity.CartItemEntity;
 import com.allra.backend.domain.product.entity.ProductEntity;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -144,5 +146,70 @@ public class CartDto {
                     .build();
         }
     }
-    
+
+    /**
+     * 장바구니 상품 추가 응답 DTO (POST)
+     * - carId + createdAt + items 구조
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AddCartItemsResponseDto {
+        private Long cartId;
+        private LocalDateTime createdAt;
+        private List<CartItem> items;
+
+        @Data
+        @Builder
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class CartItem {
+            private Long cartItemId;
+            private Long productId;
+            private String productName;
+            private Integer quantity;
+            private Integer price;
+            private Boolean soldOut;
+        }
+
+        public static AddCartItemsResponseDto fromEntity(CartEntity cart) {
+            return AddCartItemsResponseDto.builder()
+                    .createdAt(cart.getCreatedAt())
+                    .items(cart.getItems().stream()
+                            .map(item -> {
+                                ProductEntity product = item.getProduct();
+                                return CartItem.builder()
+                                        .cartItemId(item.getId())
+                                        .productId(product.getId())
+                                        .productName(product.getName())
+                                        .quantity(item.getQuantity())
+                                        .price(product.getPrice())
+                                        .soldOut(Boolean.TRUE.equals(product.getSoldOut()))
+                                        .build();
+                            })
+                            .collect(Collectors.toList()))
+                    .build();
+        }
+    }
+
+    /**
+     * 장바구니 상품 추가 요청 DTO (POST)
+     * - RequestBody로 전달받는 구조
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AddCartItemsRequestDto {
+        @NotNull(message = "상품 ID는 필수입니다.")
+        private Long productId;
+
+        @NotNull(message = "수량은 필수입니다.")
+        @Min(value = 1, message = "수량은 1개 이상이어야 합니다.")
+        private Integer quantity;
+    }
+
+
+
 }

@@ -10,10 +10,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.allra.backend.docs.swagger.SwaggerTags;
 import com.allra.backend.domain.cart.dto.CartDto;
 import com.allra.backend.domain.cart.service.CartService;
 import com.allra.backend.global.dto.ApiResponseDto;
 
+<<<<<<< Updated upstream
+=======
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+>>>>>>> Stashed changes
 import lombok.RequiredArgsConstructor;
 
 
@@ -77,5 +84,22 @@ public class CartController {
                         .body(ApiResponseDto.fail(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.getReasonPhrase())));
     }
 
+<<<<<<< Updated upstream
 
+=======
+    /**
+     * 🛒 장바구니 상품 추가
+     */
+    @PostMapping
+    @Operation(summary = "상품을 장바구니에 추가", description = "사용자의 장바구니에 상품을 추가하거나 수량을 증가시킵니다.")
+    public ResponseEntity<ApiResponseDto<CartDto.AddCartItemsResponseDto>> addProductsToCart(
+            @PathVariable Long userId,
+            @Valid @RequestBody CartDto.AddCartItemsRequestDto request) {
+
+        CartDto.AddCartItemsResponseDto response = cartService.addProductsToCart(userId, request);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponseDto.success("상품이 장바구니에 추가되었습니다.", response));
+    }
+>>>>>>> Stashed changes
 }
