@@ -5,7 +5,9 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,7 +17,6 @@ import com.allra.backend.docs.swagger.SwaggerTags;
 import com.allra.backend.domain.cart.dto.CartDto;
 import com.allra.backend.domain.cart.service.CartService;
 import com.allra.backend.global.dto.ApiResponseDto;
-import com.allra.backend.docs.swagger.SwaggerTags;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -74,7 +75,7 @@ public class CartController {
     }
 
     /**
-     * 📦 장바구니 아이템 단건 상세 조회
+     * 장바구니 아이템 단건 상세 조회
      */
     @GetMapping("/{cartId}/items/{cartItemId}")
     @Operation(
@@ -95,33 +96,77 @@ public class CartController {
     }
 
     /**
-     * ➕ 장바구니 상품 추가
-     * <p>
-     * 사용자의 장바구니에 상품을 추가하거나,
-     * 이미 존재하는 상품의 경우 수량을 증가시킵니다.<br><br>
-     *
-     * ✅ <b>요청 예시 (JSON)</b><br>
-     * <pre>{
-     *   "productId": 1001,
-     *   "quantity": 2
-     * }</pre>
-     *
-     * ✅ <b>응답 형식</b><br>
-     * <code>ApiResponseDto&lt;AddCartItemsResponseDto&gt;</code><br><br>
-     *
-     * 성공 시 <code>201 Created</code> 응답을 반환합니다.
+     * 상품 장바구니 추가
      */
-     @PostMapping
-     @Operation(summary = "상품을 장바구니에 추가", description = SwaggerTags.CART_POST_ADD_ITEM_DESC)
-     public ResponseEntity<ApiResponseDto<CartDto.AddCartItemsResponseDto>> addProductsToCart(
-            @PathVariable Long userId,
-            @Valid @RequestBody CartDto.AddCartItemsRequestDto request) {
+    @PostMapping
+    @Operation(
+        summary = "상품을 장바구니에 추가",
+        description = SwaggerTags.CART_POST_ADD_ITEM_DESC
+    )
+    public ResponseEntity<ApiResponseDto<CartDto.AddCartItemsResponseDto>> addProductsToCart(
+            @RequestBody CartDto.AddCartItemsRequestDto request) {
 
-        CartDto.AddCartItemsResponseDto response = cartService.addProductsToCart(userId, request);
+        CartDto.AddCartItemsResponseDto response = cartService.addProductsToCart(request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponseDto.success("상품이 장바구니에 추가되었습니다.", response));
     }
 
-    
+    /**
+     * 장바구니 상품 수량 수정
+     */
+    @PatchMapping("/{cartId}/items/{cartItemId}")
+    @Operation(
+        summary = "장바구니 상품 수량 수정",
+        description = SwaggerTags.CART_PATCH_UPDATE_ITEM_DESC
+    )
+    public ResponseEntity<ApiResponseDto<CartDto.UpdateCartItemResponseDto>> updateCartItemQuantity(
+            @PathVariable Long userId,
+            @PathVariable Long cartId,
+            @PathVariable Long cartItemId,
+            @Valid @RequestBody CartDto.UpdateCartItemRequestDto request) {
+
+        CartDto.UpdateCartItemResponseDto response = cartService.updateCartItemQuantity(userId, cartId, cartItemId, request);
+
+        return ResponseEntity.ok(ApiResponseDto.success("상품 수량이 수정되었습니다.", response));
+    }
+
+    /**
+     * 장바구니 개별 상품 삭제
+     * 
+     * 특정 장바구니(cartId) 내에서 상품(cartItemId)을 삭제합니다.
+     */
+    @DeleteMapping("/{cartId}/items/{cartItemId}")
+    @Operation(
+        summary = "장바구니 상품 삭제",
+        description = SwaggerTags.CART_DELETE_ITEM_DESC
+    )
+    public ResponseEntity<ApiResponseDto<Void>> deleteCartItem(
+            @PathVariable Long userId,
+            @PathVariable Long cartId,
+            @PathVariable Long cartItemId) {
+
+        cartService.deleteCartItem(userId, cartId, cartItemId);
+        return ResponseEntity.ok(ApiResponseDto.success("상품이 장바구니에서 삭제되었습니다.", null));
+    }
+
+    /**
+     * 🗑 장바구니 전체 삭제
+     * 
+     * 사용자의 장바구니(cartId) 전체를 삭제합니다.
+     */
+    @DeleteMapping("/{cartId}")
+    @Operation(
+        summary = "장바구니 전체 삭제",
+        description = SwaggerTags.CART_DELETE_CART_DESC
+    )
+    public ResponseEntity<ApiResponseDto<Void>> deleteEntireCart(
+            @PathVariable Long userId,
+            @PathVariable Long cartId) {
+
+        cartService.deleteEntireCart(userId, cartId);
+        return ResponseEntity.ok(ApiResponseDto.success("장바구니가 모두 비워졌습니다.", null));
+    }
+
+
 }

@@ -194,24 +194,85 @@ public class CartDto {
     }
 
     /**
-     * 장바구니 상품 추가 요청 DTO (POST)
-     * - RequestBody로 전달받는 구조
+     * 장바구니 상품 수량 수정 응답 DTO (PATCH)
+     * 
+     * 수량 변경 후, 갱신된 장바구니 아이템 정보를 응답으로 반환합니다.
+     * 
+     * 포함 정보:
+     * - cartItemId: 장바구니 아이템 고유 ID
+     * - productId: 상품 ID
+     * - productName: 상품명
+     * - quantity: 변경된 수량
+     * - price: 상품 단가
      */
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class AddCartItemsRequestDto {
-            @Schema(description = "상품 ID (추가할 상품의 고유 식별자)", example = "1001")
-            @NotNull(message = "상품 ID는 필수입니다.")
-            private Long productId;
+    public static class UpdateCartItemResponseDto {
+        private Long cartItemId;
+        private Long productId;
+        private String productName;
+        private Integer quantity;
+        private Integer price;
 
-            @Schema(description = "추가할 상품 수량 (1 이상)", example = "2")
-            @NotNull(message = "수량은 필수입니다.")
-            @Min(value = 1, message = "수량은 1개 이상이어야 합니다.")
-            private Integer quantity;
+        public static UpdateCartItemResponseDto fromEntity(CartItemEntity entity) {
+            ProductEntity product = entity.getProduct();
+            return UpdateCartItemResponseDto.builder()
+                    .cartItemId(entity.getId())
+                    .productId(product.getId())
+                    .productName(product.getName())
+                    .quantity(entity.getQuantity())
+                    .price(product.getPrice())
+                    .build();
+        }
     }
 
+    /**
+     * 장바구니 상품 추가 요청 DTO (POST)
+     *
+     * 사용자가 상품을 장바구니에 추가할 때 사용합니다.
+     * 수량은 기본값 1로 처리되며, 필요 시 PATCH API로 수정할 수 있습니다.
+     *
+     * 요청 예시 (JSON)
+     * ```json
+     * {
+     *   "userId": 1,
+     *   "productId": 1001
+     * }
+     * ```
+     */
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class AddCartItemsRequestDto {
+        @Schema(description = "사용자 ID (장바구니 소유자)", example = "1")
+        @NotNull(message = "사용자 ID는 필수입니다.")
+        private Long userId;
+
+        @Schema(description = "상품 ID (추가할 상품의 고유 식별자)", example = "1001")
+        @NotNull(message = "상품 ID는 필수입니다.")
+        private Long productId;
+    }
+
+    /**
+     * 장바구니 상품 수량 수정 요청 DTO (PATCH)
+     *
+     * 기존 장바구니에 담긴 상품의 수량을 변경할 때 사용합니다.
+     * 프론트에서 전달된 수량으로 그대로 갱신됩니다.
+     *
+     * 요청 예시 (JSON)
+     * ```json
+     * {
+     *   "quantity": 3
+     * }
+     * ```
+     */
+    @Data @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class UpdateCartItemRequestDto {
+        @Schema(description = "변경할 상품 수량 (1 이상)", example = "3")
+        @NotNull(message = "수량은 필수입니다.")
+        @Min(value = 1, message = "수량은 1개 이상이어야 합니다.")
+        private Integer quantity;
+    }
 
 
 }

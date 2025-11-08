@@ -40,8 +40,7 @@ public final class SwaggerTags {
     public static final String PRODUCT_NAME = "📦 상품 API";
     public static final String PRODUCT_DESC =
             "<b>상품 목록 및 상세 조회 관련 API</b><br>" +
-
-            "<b>상품 목록 및 상세 조회 관련 엔드포인트</b><br>" +
+            "상품 목록 및 상세 조회 관련 엔드포인트<br>" +
 
             "<b>카테고리</b>, <b>상품명</b>, <b>가격 범위</b> 기반 검색과 페이징 기능을 제공합니다.";
 
@@ -96,10 +95,49 @@ public final class SwaggerTags {
         사용자의 장바구니에 상품을 추가하거나, 이미 존재하는 상품의 수량을 증가시킵니다.<br><br>
         ✅ <b>요청 예시</b>:<br>
         <pre>{
-            "productId": 1001,
-            "quantity": 2
+            "userId" : 23
+            "productId": 1001
         }</pre>
         ✅ <b>응답 형식</b>: <code>ApiResponseDto&lt;AddCartItemsResponseDto&gt;</code><br><br>
         성공 시 <code>201 Created</code> 반환.
+        """;
+
+    public static final String CART_PATCH_UPDATE_ITEM_DESC = """
+        🔄 <b>장바구니 상품 수량 수정</b><br>
+        기존 장바구니에 담긴 상품의 수량을 변경합니다.<br><br>
+        ✅ <b>요청 예시</b>:<br>
+        <pre>{
+            "quantity": 3
+        }</pre>
+        ✅ <b>응답 형식</b>: <code>ApiResponseDto&lt;UpdateCartItemResponseDto&gt;</code><br><br>
+        성공 시 <code>200 OK</code> 반환.
+        """;
+
+    public static final String CART_DELETE_ITEM_DESC = """
+        ❌ <b>장바구니 아이템 삭제</b><br>
+        특정 장바구니(<b>cartId</b>) 내 개별 상품(<b>cartItemId</b>)을 삭제합니다.<br><br>
+        ✅ <b>요청 예시</b>:<br>
+        <code>DELETE /api/users/1/carts/2/items/5</code><br><br>
+        ✅ <b>응답 예시</b>:<br>
+        <pre>{
+            "status": "OK",
+            "message": "장바구니 상품이 삭제되었습니다.",
+            "data": null
+        }</pre>
+        성공 시 <code>200 OK</code> 반환.
+        """;
+
+    public static final String CART_DELETE_CART_DESC = """
+        🗑️ <b>전체 장바구니 삭제</b><br>
+        특정 사용자(<b>userId</b>)의 장바구니 전체를 삭제합니다.<br><br>
+        ✅ <b>요청 예시</b>:<br>
+        <code>DELETE /api/users/1/carts/2</code><br><br>
+        ✅ <b>응답 예시</b>:<br>
+        <pre>{
+            "status": "OK",
+            "message": "장바구니가 전체 삭제되었습니다.",
+            "data": null
+        }</pre>
+        성공 시 <code>200 OK</code> 반환.
         """;
 }
