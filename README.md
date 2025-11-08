@@ -218,7 +218,7 @@ PageResponse를 공통으로 사용하여 페이징 응답 구조의 일관성�
     }
   }
 }
-
+```
 
 🔹 설계 요약
 계층	역할
@@ -423,7 +423,7 @@ DB 데이터 `"아이폰 15 프로"`와 매칭되지 않음.
 
 ### Q: 최종적으로 테스트 코드는 이렇게 수정하면 되나요?
 **A:** 맞음. 아래 구조가 Repository 로직과 완전히 일치하는 최적의 테스트다.  
-```java
+
 Page<ProductEntity> result = productRepository.searchProducts(
     "전자제품", "아이폰15", 1000000, 1600000, PageRequest.of(0, 10)
 );

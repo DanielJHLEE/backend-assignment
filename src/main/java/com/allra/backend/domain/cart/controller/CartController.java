@@ -15,6 +15,7 @@ import com.allra.backend.docs.swagger.SwaggerTags;
 import com.allra.backend.domain.cart.dto.CartDto;
 import com.allra.backend.domain.cart.service.CartService;
 import com.allra.backend.global.dto.ApiResponseDto;
+import com.allra.backend.docs.swagger.SwaggerTags;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,8 +26,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Cart Controller
- * 장바구니 관련 API를 처리하는 컨트롤러 클래스
+ * 🛒 Cart Controller
+ * 사용자별 장바구니 관련 API를 처리하는 컨트롤러 클래스
  */
 @RestController
 @RequestMapping("/api/users/{userId}/carts")
@@ -64,7 +65,7 @@ public class CartController {
         List<CartDto.CartsIdDetailResponseDto> cartDetails = cartService.getCartsDetailByCartId(userId, cartId);
 
         return Optional.ofNullable(cartDetails)
-                .filter(list -> !list.isEmpty()) // 비어있지 않으면 OK
+                .filter(list -> !list.isEmpty())
                 .map(list -> ResponseEntity.ok(
                         ApiResponseDto.success(HttpStatus.OK.getReasonPhrase(), list)
                 ))

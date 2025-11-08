@@ -14,16 +14,21 @@ import org.springframework.web.bind.annotation.RestController;
 import com.allra.backend.docs.swagger.SwaggerTags;
 import com.allra.backend.domain.product.dto.ProductDto;
 import com.allra.backend.domain.product.service.ProductService;
-
 import com.allra.backend.global.dto.ApiResponseDto;
 import com.allra.backend.global.dto.PageResponseDto;
+import com.allra.backend.docs.swagger.SwaggerTags;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 /**
- * Product Controller
+ * 📦 Product Controller
  * 상품 관련 API를 처리하는 컨트롤러 클래스
  */
 @RestController
@@ -50,8 +55,8 @@ public class ProductController {
             @RequestParam(required = false) Integer minPrice,// 가격 하한
             @RequestParam(required = false) Integer maxPrice // 가격 상한
     ) {
-        Page<ProductDto.ProductResponseDto> products = 
-            productService.getAllProducts(page, size, category, name, minPrice, maxPrice);
+        Page<ProductDto.ProductResponseDto> products =
+                productService.getAllProducts(page, size, category, name, minPrice, maxPrice);
 
         return ApiResponseDto.success(HttpStatus.OK.getReasonPhrase(), PageResponseDto.from(products));
     }
@@ -70,7 +75,6 @@ public class ProductController {
                         ApiResponseDto.success(HttpStatus.OK.getReasonPhrase(), product)
                 ))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponseDto.fail(HttpStatus.NOT_FOUND.getReasonPhrase())));
+                        .body(ApiResponseDto.fail(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.getReasonPhrase())));
     }
-    
 }

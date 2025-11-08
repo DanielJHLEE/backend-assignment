@@ -40,6 +40,9 @@ public final class SwaggerTags {
     public static final String PRODUCT_NAME = "📦 상품 API";
     public static final String PRODUCT_DESC =
             "<b>상품 목록 및 상세 조회 관련 API엔드포인트</b><br>" +
+
+            "<b>상품 목록 및 상세 조회 관련 엔드포인트</b><br>" +
+
             "<b>카테고리</b>, <b>상품명</b>, <b>가격 범위</b> 기반 검색과 페이징 기능을 제공합니다.";
 
     public static final String PRODUCT_GET_ALL_DESC = """
@@ -63,7 +66,7 @@ public final class SwaggerTags {
      * ========================================================== */
     public static final String CART_NAME = "🛒 장바구니 API";
     public static final String CART_DESC =
-            "<b>사용자별 장바구니 관련 API엔드포인트</b><br>" +
+            "<b>사용자별 장바구니 조회 관련 엔드포인트</b><br>" +
             "특정 사용자<b>(userId)</b>를 기준으로 장바구니 목록 및 상품 상세 정보를 제공합니다.<br>" +
             "더미 데이터: <b>16개</b>";
 
