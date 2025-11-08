@@ -276,42 +276,42 @@ Spring Boot 환경에서 `UserRepository`, `UserService`, `UserController` 계�
 
 ### 대화 요약
 
-**Q:** findAll()로 사용자 목록을 조회할 때 반환 타입은 List로 해도 되나요?  
+****Q:** findAll()로 사용자 목록을 조회할 때 반환 타입은 List로 해도 되나요? ** 
 **A:** 맞음. 단, API 응답에서는 `ApiResponseDto<List<UserResponseDto>>` 형태로 감싸  
 일관된 구조를 유지하도록 제안함.
 
 ---
 
-**Q:** 단일 사용자 조회 시 존재하지 않으면 예외를 던질까요, null 반환이 나을까요?  
+****Q:** 단일 사용자 조회 시 존재하지 않으면 예외를 던질까요, null 반환이 나을까요?  **
 **A:** 비즈니스 예외(`BusinessException`)로 처리하는 것이 REST 표준에 맞음.  
 → `userRepository.findById(id).orElseThrow(...)` 형태로 수정.
 
 ---
 
-**Q:** 더미 유저 데이터를 초기화하려면 data.sql을 써도 되나요?  
+****Q:** 더미 유저 데이터를 초기화하려면 data.sql을 써도 되나요?  **
 **A:** 가능함. 단, `spring.sql.init.mode=always`와 `ddl-auto=create`를 함께 설정해야  
 애플리케이션 시작 시점에 데이터가 삽입됨.
 
 ---
 
-**Q:** Swagger에서 사용자 API를 한 그룹으로 묶고 싶습니다.  
+****Q:** Swagger에서 사용자 API를 한 그룹으로 묶고 싶습니다.**  
 **A:** `@Tag(name = SwaggerTags.USER_NAME, description = SwaggerTags.USER_DESC)`  
 로 설정하면 Swagger UI에서 “👤 사용자 API” 그룹으로 표시됨.
 
 ---
 
-**Q:** Optional이 비어 있을 때 404 응답을 주려면 어떻게 하나요?  
+****Q:** Optional이 비어 있을 때 404 응답을 주려면 어떻게 하나요?**  
 **A:** `Optional.map(...).orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)... )`  
 패턴으로 처리하거나, Service 단에서 예외를 던져 ControllerAdvice에서 처리하도록 제안함.
 
 ---
 
-**Q:** `User`라는 테이블명이 충돌납니다.  
+****Q:** `User`라는 테이블명이 충돌납니다.  **
 **A:** `@Table(name = "users")`로 변경하거나, H2 DB 실행 시 `MODE=MySQL` 설정을 추가하라고 안내함.
 
 ---
 
-**Q:** H2 DB로 테스트 시 한글 데이터가 깨집니다.  
+****Q:** H2 DB로 테스트 시 한글 데이터가 깨집니다.**  
 **A:** `spring.datasource.url`에 `characterEncoding=UTF-8`과  
 `serverTimezone=Asia/Seoul` 옵션을 추가하도록 안내함.
 
@@ -335,102 +335,85 @@ Spring Boot 환경에서 `UserRepository`, `UserService`, `UserController` 계�
 --------------------------------------------------------------------------------------------
 
 ## PRODUCT테이블 상품 목록 API기능 구현 당시 AI 도움기록
+
 ## 해결하려던 문제
 Spring Boot 환경에서 `ProductRepository`, `ProductService`, `ProductController`의 계층 구조를 구성하고,  
-QueryDSL 기반의 상품 검색 기능(`searchProducts`)과 상세 조회 기능(`findById`)의 테스트 코드를 작성 및 검증하는 과정에서  
-데이터베이스 설정, 공백/대소문자 처리, Optional 반환 검증 등 다양한 테스트 실패 이슈를 해결하고자 함.
+QueryDSL 기반의 상품 검색 기능(`searchProducts`)과 상세 조회 기능(`findById`)을 구현 및 테스트하는 과정에서  
+검색 조건 처리, 테스트 데이터 검증, QueryDSL 동작 검증 등 다양한 이슈를 해결하고자 함.
 
 ---
 
 ## 대화 요약
 
 ### Q: ProductControllerTest에서 service를 호출하는 이유가 뭔가요?
-**A:** 컨트롤러 테스트는 실제 API 요청 흐름을 검증하기 위해 `MockMvc`로 컨트롤러를 호출하고,  
-내부 로직은 `@MockBean`으로 `Service` 계층을 모킹(mocking)하여 컨트롤러만 독립적으로 테스트하는 구조가 맞다고 설명함.
+**A:** 컨트롤러 테스트는 실제 HTTP 요청 흐름을 검증하기 위해 `MockMvc`를 사용하고,  
+내부 로직은 `@MockBean`으로 모킹하여 컨트롤러만 독립적으로 검증하는 구조가 맞다고 설명함.
 
 ---
 
 ### Q: ProductServiceTest와 ControllerTest의 차이는 무엇인가요?
-**A:** `ServiceTest`는 비즈니스 로직(Repository 호출, 변환, 트랜잭션 등)을 단위 테스트하는 것이고,  
-`ControllerTest`는 HTTP 요청/응답 흐름과 JSON 직렬화를 검증하기 위한 통합 테스트임을 구분하여 설명함.
+**A:** `ServiceTest`는 비즈니스 로직(쿼리 실행, 변환, 트랜잭션)을 단위로 검증하고,  
+`ControllerTest`는 요청/응답(JSON 직렬화 포함)을 검증하는 통합 테스트임을 구분함.
 
 ---
 
-### Q: Repository 테스트는 굳이 필요할까요?
-**A:** 필요함. 특히 QueryDSL이나 커스텀 쿼리를 직접 작성한 경우,  
-JPQL 문법이나 조건문(`BooleanBuilder`)이 실제로 잘 작동하는지 확인하기 위한 검증이 중요하다고 제안함.
+### Q: Repository 테스트는 꼭 필요한가요?
+**A:** 필요함. 특히 QueryDSL로 작성한 커스텀 쿼리(`searchProducts`)는  
+JPQL 구문, 조건 빌더(`BooleanBuilder`)가 올바르게 작동하는지 검증이 중요하다고 설명함.
 
 ---
 
-### Q: Repository에 `save()` 메서드가 없는데 테스트는 어떻게 하나요?
-**A:** Repository에서 `EntityManager.persist()`를 직접 사용하거나 `@DataJpaTest` 환경에서  
-H2 인메모리 DB를 통해 `persist()` 후 `flush()`로 데이터를 반영하여 테스트하도록 안내함.
+### Q: Repository에 `save()`가 없는데 테스트는 어떻게 하나요?
+**A:** Repository 단위 테스트에서는 `EntityManager.persist()`를 직접 사용하거나  
+`@DataJpaTest` 환경에서 H2 인메모리 DB로 `persist()` + `flush()`를 통해 테스트 데이터를 삽입하도록 안내함.
 
 ---
 
-### Q: `application-test.yml`을 따로 만들어도 될까요?  
-**A:** 가능함. `spring.datasource.url=jdbc:h2:mem:testdb` 설정으로 테스트 환경을 분리하고,  
-`ddl-auto=create-drop` 옵션을 추가해 테스트 실행 시마다 테이블을 자동 생성/삭제하도록 구성하는 방법을 제시함.
+### Q: 테스트 환경 분리용 `application-test.yml`을 써도 되나요?
+**A:** 가능함. `spring.datasource.url=jdbc:h2:mem:testdb` 와  
+`spring.jpa.hibernate.ddl-auto=create-drop` 설정을 적용해 테스트 시 DB를 자동 생성/삭제하도록 구성함.
 
 ---
 
-### Q: `No qualifying bean of type 'ProductRepository'` 오류가 발생합니다.
-**A:** `@SpringBootTest` 또는 `@DataJpaTest` 어노테이션을 추가해 스프링 컨텍스트를 로드하고,  
-`@ActiveProfiles("test")`로 테스트 프로필을 활성화해야 `@Repository` 빈이 등록된다고 설명함.
+### Q: `No qualifying bean of type 'ProductRepository'` 오류가 납니다.
+**A:** 테스트 클래스에 `@SpringBootTest` 또는 `@DataJpaTest`를 추가하고,  
+`@ActiveProfiles("test")`로 테스트 프로필을 활성화해야 Repository Bean이 로드된다고 안내함.
 
 ---
 
-### Q: `TransactionRequiredException`이 발생하는 이유가 뭔가요?
-**A:** `EntityManager.persist()`를 사용한 후 트랜잭션이 없기 때문에 발생하는 예외로,  
-테스트 클래스에 `@Transactional`을 추가해 해결하도록 안내함.
+### Q: `TransactionRequiredException`이 발생합니다.
+**A:** `EntityManager.persist()`는 트랜잭션이 필요하므로  
+테스트 클래스에 `@Transactional`을 추가해야 한다고 설명함.
 
 ---
 
-### Q: 테스트 실행 시 `user` 테이블 관련 오류가 뜹니다.
-**A:** `user`는 H2/MySQL에서 예약어이므로 엔티티 테이블명(`@Table(name="users")`)을 변경하거나  
-`MODE=MySQL`을 추가하여 호환 모드로 실행해야 한다고 설명함.
+### Q: 공백 제거 로직 때문에 검색이 안 맞습니다.
+**A:** Repository 내부에서 `replaceAll("\\s+", "")`로 공백 제거 후 검색하므로,  
+테스트 시 `"아이폰15"`처럼 공백 없는 문자열로 입력해야 매칭된다고 안내함.
 
 ---
 
-### Q: 공백 제거 로직 때문에 테스트 결과가 0건으로 나옵니다.
-**A:** Repository 로직에서 `name.replaceAll("\\s+", "")`로 공백을 제거하기 때문에  
-테스트에서도 `"아이폰15"`처럼 공백 없는 검색어를 사용해야 정상적으로 매칭된다고 설명함.
+### Q: `"상품명 검색이 대소문자 구분 없이 동작해야 한다"` 테스트에서 공백 검증은 왜 안 하나요?
+**A:** 공백 제거 로직이 이미 존재하므로 별도 공백 테스트는 의미 없다고 분석함.
 
 ---
 
-### Q: `"상품명 검색이 대소문자 구분 없이 정상 동작해야 한다"` 테스트에서 공백 테스트는 왜 제외했나요?
-**A:** 이미 Repository 로직에서 검색어의 공백을 제거하고 비교하기 때문에  
-공백 입력 자체를 테스트하는 것은 의미가 없다고 분석함.
+### Q: `"카테고리와 가격 범위 조건으로 필터링"` 외에 상품명 조건도 같이 검증해야 하나요?
+**A:** 맞음. 단일 조건뿐 아니라 `"카테고리 + 상품명 + 가격 범위"` 복합 조건 테스트를 추가하는 것이 바람직하다고 제안함.
 
 ---
 
-### Q: `"상품 상세 조회 - ID로 조회 시 Optional 반환 확인"` 테스트의 의도는 올바른가요?
-**A:** 이 테스트는 존재하는 ID 조회 시 Optional이 `Present` 상태임을 확인하는 것이므로 정상임.  
-존재하지 않는 경우를 테스트하려면 별도로 `"존재하지 않는 ID 조회 시 Empty 반환"` 테스트를 추가하라고 설명함.
+### Q: `"searchProducts_withCategoryPriceAndName"` 테스트가 실패합니다. (expected:1 but was:0)
+**A:** `"아이폰 15"`가 `"아이폰15"`로 변환되면서 일치하지 않는 문제임.  
+검색어를 `"아이폰15"`로 수정해 일관성 있게 맞추도록 안내함.
 
 ---
 
-### Q: `"카테고리와 가격 범위 조건으로 필터링"` 테스트 외에 상품명 조건도 같이 테스트해야 할까요?
-**A:** 맞음. 기존 테스트는 단일 조건 조합 검증용이고,  
-새로 `"카테고리, 가격, 상품명"`을 모두 포함하는 복합 조건 테스트를 추가하는 것이 바람직하다고 제안함.
+### Q: 최종적으로 테스트 코드는 이렇게 구현 하면 되나요?
+**A:** 맞음. Repository의 검색 로직(`searchProducts`)과 일치하도록  
+카테고리, 상품명, 가격 조건을 조합한 복합 테스트를 작성하여  
+데이터 매칭과 검색 결과의 일관성을 검증하는 형태로 마무리함.
 
----
-
-### Q: `"searchProducts_withCategoryPriceAndName"` 테스트가 실패합니다 (expected:1 but was:0)
-**A:** 공백 제거 로직(`replaceAll("\\s+", "")`) 때문에 `"아이폰 15"`가 `"아이폰15"`로 변환되어  
-DB 데이터 `"아이폰 15 프로"`와 매칭되지 않음.  
-검색어를 `"아이폰15"`로 수정해 일관성 있게 맞추라고 안내함.
-
----
-
-### Q: 최종적으로 테스트 코드는 이렇게 수정하면 되나요?
-**A:** 맞음. 아래 구조가 Repository 로직과 완전히 일치하는 최적의 테스트다.  
-
-Page<ProductEntity> result = productRepository.searchProducts(
-    "전자제품", "아이폰15", 1000000, 1600000, PageRequest.of(0, 10)
-);
-assertThat(result.getTotalElements()).isEqualTo(1);
-assertThat(result.getContent().get(0).getName()).isEqualTo("아이폰15프로");
 
 --------------------------------------------------------------------------------------------
 
