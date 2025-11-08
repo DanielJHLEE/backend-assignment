@@ -35,5 +35,8 @@ springdoc:
     disable-swagger-default-url: true  # Swagger 기본 URL 비활성화
   api-docs:
     path: /v3/api-docs       # OpenAPI 문서 기본 경로 (기본값이지만 명시적으로 유지)
+logging:
+  level:
+    org.springframework.web.servlet.resource.ResourceHttpRequestHandler: off
 
 
