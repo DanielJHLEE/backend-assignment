@@ -267,7 +267,6 @@ PageResponse를 공통으로 사용하여 페이징 응답 구조의 일관성�
 --------------------------------------------------------------------------------------------
 
 ## 👤 USER API 기능 구현 당시 AI 도움기록
-
 ### 🧭 해결하려던 문제
 Spring Boot 환경에서 `UserRepository`, `UserService`, `UserController` 계층을 구성하고,  
 전체 사용자 조회 및 단일 사용자 조회 API를 구현하는 과정에서  
@@ -372,62 +371,61 @@ QueryDSL 기반의 상품 검색(`searchProducts`) 및 상세 조회(`findById`)
 
 ---
 
-## 🛒 CART 테이블 사용자별 장바구니 API 기능 구현 당시 AI 도움기록
-
+## 🛒 CART 테이블 사용자별 장바구니 API 기능 구현 당시 AI 참고 기록
 ### 🧭 해결하려던 문제
-사용자별 장바구니(`CartEntity`)와 장바구니 상품(`CartItemEntity`)의 CRUD 기능 구현 중  
-상품 중복 처리, 권한 검증, 공통 검증 유틸 설계, RESTful 경로 구조 확립 등  
-비즈니스 로직 전반의 일관성과 안정성을 확보하고자 함.
+사용자별 장바구니(`CartEntity`)와 장바구니 상품(`CartItemEntity`)의 CRUD 기능을 구현하며  
+상품 중복 처리, 권한 검증, 공통 검증 유틸 설계, RESTful 경로 구조 확립,  
+그리고 Service 단 테스트 구조 설계를 함께 점검함.
 
 ---
 
 ### 💬 대화 요약
 
----
-
-**Q: 동일 상품 추가 시 중복 처리는 어떻게 하나요?**  
-**A:** 동일 상품이 이미 존재하면 `quantity + 1`로 수량 증가,  
-없으면 새 `CartItemEntity` 생성 후 `EntityManager.persist()`로 저장하도록 설계함.
+**Q: 동일 상품 추가 시 중복 처리는 설계 기준에서 어떤 방향으로 하면 좋을까요?**  
+> 동일 상품이 이미 존재하면 `quantity + 1`로 수량을 증가시키고,  
+> 존재하지 않으면 새 `CartItemEntity`를 생성하여 `EntityManager.persist()`로 저장하는 방식으로 구성함.
 
 ---
 
-**Q: 수량 수정과 삭제 API는 어떻게 구분했나요?**  
-**A:**  
-- **수량 수정:** `PATCH /users/{userId}/carts/{cartId}/items/{cartItemId}`  
-- **상품 삭제:** `DELETE /users/{userId}/carts/{cartId}/items/{cartItemId}`  
-- **장바구니 전체 삭제:** `DELETE /users/{userId}/carts/{cartId}`  
-로 구분하여 구분함.
+**Q: 수량 수정과 삭제 API는 규격은 어떤 기준으로 구분 하는게 좋을까요?**  
+> - 수량 수정: `PATCH /users/{userId}/carts/{cartId}/items/{cartItemId}`  
+> - 상품 삭제: `DELETE /users/{userId}/carts/{cartId}/items/{cartItemId}`  
+> - 장바구니 전체 삭제: `DELETE /users/{userId}/carts/{cartId}`  
+> RESTful 원칙에 맞게 엔드포인트를 명확히 분리함.
 
 ---
 
-**Q: 권한 검증은 어떤 방향으로 처리하는게 나을까요?**  
-**A:** `AuthValidator.validateOwnership(entityUserId, requestUserId, targetName)`  
-공통 유틸을 추가하여 `if`문 대신 예외(`BusinessException`) 기반 검증으로 통일함.  
-Spring Security 미적용 환경에서도 최소한의 접근 제어가 가능하도록 설계함.
+**Q: 권한 검증은 어떤 방향으로 처리하면 좋을까요?**  
+> `AuthValidator.validateOwnership(entityUserId, requestUserId, targetName)`  
+> 공통 유틸을 활용해 단순 조건문 대신 예외(`BusinessException`) 중심으로 통일하고,  
+> Spring Security 미적용 환경에서도 최소한의 접근 제어가 가능하도록 설계함.
 
 ---
 
-**Q: Swagger 문서는 어떤 방향으로 구성하는게 좋을까요?**  
-**A:** `SwaggerTags` 클래스에 각 API 설명과 JSON 예시를 HTML `<pre>` 블록으로 작성하고,  
-`@Operation(description = SwaggerTags.CART_POST_ADD_ITEM_DESC)` 형태로 연결해  
-Swagger UI에서 구조적이고 가독성 있는 문서 형태로 제공함.
+**Q: Service 단 테스트는 어떤 단위로 구성히면 좋을까요?**  
+> 실제 DB 호출이 아닌 Mockito 기반 Mock 테스트로  
+> `addProductsToCart`, `updateCartItemQuantity`, `deleteCartItem`, `deleteEntireCart` 등  
+> 각 로직의 분기(수량 증가, 예외 발생, 삭제 호출 등)를 검증함.  
+> Repository는 별도로 통합 테스트(`CartRepositoryTest`)로 구성하여 QueryDSL 조인 동작을 확인함.
 
 ---
 
-**Q: 최종 구조는 어떻게 정리되나요?**  
-**A:**  
-- `CartController` CRUD 완성 (`GET`, `POST`, `PATCH`, `DELETE`)  
-- `AuthValidator` 도입으로 권한 검증 공통화  
-- 중복 상품 수량 증가 및 전체 삭제 로직 분리  
-- `SwaggerTags` 기반 API 문서 자동화 완료  
+**Q: 최종 구조는 어떻게 정리되었나요?**  
+> - `CartController` CRUD API 완성 (`GET`, `POST`, `PATCH`, `DELETE`)  
+> - `AuthValidator` 유틸 도입으로 권한 검증 공통화  
+> - 동일 상품 수량 증가 및 전체 삭제 로직 분리  
+> - Service 단 Mock 기반 테스트 구성 완료  
+> - `SwaggerTags` 기반 API 문서 자동화 적용  
 
 ---
 
-✔️ **AI 사용 목적:**  
-Repository·Service 계층 설계 개선, 공통 검증 구조 도입, API 문서 자동화  
+✔️ **AI 참고 목적:**  
+Service 계층 테스트 구조 검토, 로직 분기 검증 방식 점검,  
+예외 처리 및 검증 로직 통일, Swagger 문서 구성 최적화  
 
 ✔️ **활용 범위:**  
-비즈니스 로직 정립, 예외 처리 통일, Swagger 문서 정비, RESTful 경로 설계 검증
+비즈니스 로직 정리, 테스트 설계 확인, API 문서 정비, RESTful 구조 검증
+
 
 
 > 💬 본 대화 내용은 AI(ChatGPT)를 활용하여 코드 설계, 디버깅, 테스트 개선을 수행한 내역을 정리한 것입니다.
