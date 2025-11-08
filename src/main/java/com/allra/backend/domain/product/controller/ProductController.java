@@ -11,12 +11,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.allra.backend.docs.swagger.SwaggerTags;
 import com.allra.backend.domain.product.dto.ProductDto;
 import com.allra.backend.domain.product.service.ProductService;
 
 import com.allra.backend.global.dto.ApiResponseDto;
 import com.allra.backend.global.dto.PageResponseDto;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -26,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
+@Tag(name = SwaggerTags.PRODUCT_NAME, description = SwaggerTags.PRODUCT_DESC)
 public class ProductController {
 
     private final ProductService productService;
@@ -34,8 +38,12 @@ public class ProductController {
      * 상품 목록 조회 (페이징 + 검색)
      */
     @GetMapping
+    @Operation(
+        summary = "상품 목록 조회",
+        description = SwaggerTags.PRODUCT_GET_ALL_DESC
+    )
     public ApiResponseDto<PageResponseDto<ProductDto.ProductResponseDto>> getAllProducts(
-            @RequestParam(defaultValue = "0") int page,      // 페이지 번호
+            @RequestParam(defaultValue = "1") int page,      // 페이지 번호
             @RequestParam(defaultValue = "10") int size,     // 페이지 크기
             @RequestParam(required = false) String category, // 카테고리 필터
             @RequestParam(required = false) String name,     // 상품명 검색
@@ -52,6 +60,10 @@ public class ProductController {
      * 상품 상세 조회
      */
     @GetMapping("/{id}")
+    @Operation(
+        summary = "상품 상세 조회",
+        description = SwaggerTags.PRODUCT_GET_DETAIL_DESC
+    )
     public ResponseEntity<ApiResponseDto<ProductDto.ProductResponseDto>> getProductById(@PathVariable Long id) {
         return productService.getProductById(id)
                 .map(product -> ResponseEntity.ok(

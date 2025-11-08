@@ -6,10 +6,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.allra.backend.docs.swagger.SwaggerTags;
 import com.allra.backend.domain.user.dto.UserDto;
 import com.allra.backend.domain.user.service.UserService;
 import com.allra.backend.global.dto.ApiResponseDto;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -19,19 +22,32 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Tag(name = SwaggerTags.USER_NAME, description = SwaggerTags.USER_DESC)
 public class UserController {
 
     private final UserService userService;
 
-    // 전체 사용자 조회
+    /**
+     * 전체 사용자 목록 조회
+     */
     @GetMapping
+    @Operation(
+        summary = "전체 사용자 조회",
+        description = SwaggerTags.USER_GET_ALL_DESC
+    )
     public ApiResponseDto<List<UserDto.UserResponseDto>> getAllUsers() {
         List<UserDto.UserResponseDto> users = userService.findAll();
         return ApiResponseDto.success(HttpStatus.OK.getReasonPhrase(), users);
     }
 
-    // ID로 사용자 조회
+    /**
+     * 사용자 단일 조회 (ID 기준)
+     */
     @GetMapping("/{id}")
+    @Operation(
+        summary = "사용자 단일 조회",
+        description = SwaggerTags.USER_GET_DETAIL_DESC
+    )
     public ResponseEntity<ApiResponseDto<UserDto.UserResponseDto>> getUserById(@PathVariable Long id) {
         return userService.findById(id)
                 .map(user -> ResponseEntity.ok(

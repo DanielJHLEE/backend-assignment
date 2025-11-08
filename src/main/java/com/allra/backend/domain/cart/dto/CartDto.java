@@ -8,6 +8,7 @@ import com.allra.backend.domain.cart.entity.CartEntity;
 import com.allra.backend.domain.cart.entity.CartItemEntity;
 import com.allra.backend.domain.product.entity.ProductEntity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -156,7 +157,6 @@ public class CartDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class AddCartItemsResponseDto {
-        private Long cartId;
         private LocalDateTime createdAt;
         private List<CartItem> items;
 
@@ -202,12 +202,14 @@ public class CartDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class AddCartItemsRequestDto {
-        @NotNull(message = "상품 ID는 필수입니다.")
-        private Long productId;
+            @Schema(description = "상품 ID (추가할 상품의 고유 식별자)", example = "1001")
+            @NotNull(message = "상품 ID는 필수입니다.")
+            private Long productId;
 
-        @NotNull(message = "수량은 필수입니다.")
-        @Min(value = 1, message = "수량은 1개 이상이어야 합니다.")
-        private Integer quantity;
+            @Schema(description = "추가할 상품 수량 (1 이상)", example = "2")
+            @NotNull(message = "수량은 필수입니다.")
+            @Min(value = 1, message = "수량은 1개 이상이어야 합니다.")
+            private Integer quantity;
     }
 
 

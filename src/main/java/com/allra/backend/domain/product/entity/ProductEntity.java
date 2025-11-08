@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
+import com.allra.backend.global.exception.BusinessException;
+
 @Entity
 @Table(name = "product")
 @Getter
@@ -37,4 +39,10 @@ public class ProductEntity {
 
     @Column(name = "created_at", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt; // 등록일
+
+    public void validateStock(int requestedQty) {
+        if (this.stock < requestedQty) {
+            throw new BusinessException("상품 재고가 부족합니다.");
+        }
+    }
 }

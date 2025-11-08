@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import com.allra.backend.domain.product.entity.ProductEntity;
 import com.allra.backend.domain.product.entity.QProductEntity;
+import com.allra.backend.global.exception.NotFoundException;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -76,6 +77,16 @@ public class ProductRepository {
      */
     public Optional<ProductEntity> findById(Long id) {
         return Optional.ofNullable(entityManager.find(ProductEntity.class, id));
+    }
+
+    /**
+     * 존재하지 않으면 예외 발생 (NotFoundException)
+     */
+    public ProductEntity getByIdOrThrow(Long productId) {
+        ProductEntity product = entityManager.find(ProductEntity.class, productId);
+        if (product == null)
+            throw new NotFoundException("존재하지 않는 상품입니다.");
+        return product;
     }
 
 }

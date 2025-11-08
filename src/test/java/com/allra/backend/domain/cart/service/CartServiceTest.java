@@ -1,27 +1,34 @@
 package com.allra.backend.domain.cart.service;
 
-import com.allra.backend.domain.cart.dto.CartDto;
-import com.allra.backend.domain.cart.entity.CartEntity;
-import com.allra.backend.domain.cart.entity.CartItemEntity;
-import com.allra.backend.domain.cart.repository.CartRepository;
-import com.allra.backend.domain.product.entity.ProductEntity;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.boot.test.context.SpringBootTest;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyLong;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@SpringBootTest
+import com.allra.backend.domain.cart.dto.CartDto;
+import com.allra.backend.domain.cart.entity.CartEntity;
+import com.allra.backend.domain.cart.entity.CartItemEntity;
+import com.allra.backend.domain.cart.repository.CartRepository;
+import com.allra.backend.domain.product.entity.ProductEntity;
+
+@ExtendWith(MockitoExtension.class)
 class CartServiceTest {
 
-    private final CartRepository cartRepository = Mockito.mock(CartRepository.class);
-    private final CartService cartService = new CartService(cartRepository);
+    @Mock
+    private CartRepository cartRepository;
+
+    @InjectMocks
+    private CartService cartService;
 
     @Test
     @DisplayName("사용자 장바구니 조회 (userId 기준)")
