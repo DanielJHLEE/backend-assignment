@@ -277,11 +277,6 @@ Spring Boot 환경에서 `UserRepository`, `UserService`, `UserController` 계�
 
 ### 💬 대화 요약
 
-**Q: 사용자 목록 조회 시 반환 타입은 어떻게 구성하나요?**  
-**A:** DB 조회 결과는 `List<UserEntity>`로 반환하되,  
-API 응답은 `ApiResponseDto<List<UserResponseDto>>` 형태로 감싸  
-일관된 응답 구조를 유지하도록 제안함.
-
 ---
 
 **Q: 단일 사용자 조회 시 존재하지 않을 경우 어떻게 처리하나요?**  
@@ -371,18 +366,6 @@ QueryDSL 기반의 상품 검색(`searchProducts`) 및 상세 조회(`findById`)
 
 ---
 
-**Q: 공백·대소문자 처리로 검색이 안 맞습니다.**  
-**A:** Repository 내부에서 `replaceAll("\\s+", "")`로 공백 제거 로직이 존재하므로,  
-테스트에서도 `"아이폰15"`와 같이 동일 규칙을 적용해야 일관성 있는 결과를 얻을 수 있음.
-
----
-
-**Q: 복합 검색 조건 테스트는 어떻게 구성하나요?**  
-**A:** `카테고리`, `상품명`, `가격 범위`를 모두 포함한 복합 조건 테스트를 추가해  
-검색 결과의 정확도와 QueryDSL 필터링 로직을 함께 검증하도록 설계함.
-
----
-
 **Q: 최종 테스트 검증 방향은 어떻게 정리되었나요?**  
 **A:** Repository 로직(`searchProducts`)과 동일하게 조건 조합 기반 테스트를 구성하고,  
 데이터 매칭 및 검색 결과의 일관성을 검증하는 형태로 마무리함.
@@ -400,10 +383,6 @@ QueryDSL 기반의 상품 검색(`searchProducts`) 및 상세 조회(`findById`)
 
 ### 💬 대화 요약
 
-**Q: 장바구니 구조는 어떻게 설계했나요?**  
-**A:** `UserEntity` → `CartEntity` → `CartItemEntity` → `ProductEntity` 구조로 1:N 관계를 설정.  
-사용자별 장바구니에서 다수의 상품을 관리하는 형태로 구현함.
-
 ---
 
 **Q: 동일 상품 추가 시 중복 처리는 어떻게 하나요?**  
@@ -417,25 +396,25 @@ QueryDSL 기반의 상품 검색(`searchProducts`) 및 상세 조회(`findById`)
 - **수량 수정:** `PATCH /users/{userId}/carts/{cartId}/items/{cartItemId}`  
 - **상품 삭제:** `DELETE /users/{userId}/carts/{cartId}/items/{cartItemId}`  
 - **장바구니 전체 삭제:** `DELETE /users/{userId}/carts/{cartId}`  
-로 구분하여 설계함.
+로 구분하여 구분함.
 
 ---
 
-**Q: 권한 검증은 어떻게 처리했나요?**  
+**Q: 권한 검증은 어떤 방향으로 처리하는게 나을까요?**  
 **A:** `AuthValidator.validateOwnership(entityUserId, requestUserId, targetName)`  
 공통 유틸을 추가하여 `if`문 대신 예외(`BusinessException`) 기반 검증으로 통일함.  
 Spring Security 미적용 환경에서도 최소한의 접근 제어가 가능하도록 설계함.
 
 ---
 
-**Q: Swagger 문서는 어떻게 구성했나요?**  
+**Q: Swagger 문서는 어떤 방향으로 구성하는게 좋을까요?**  
 **A:** `SwaggerTags` 클래스에 각 API 설명과 JSON 예시를 HTML `<pre>` 블록으로 작성하고,  
 `@Operation(description = SwaggerTags.CART_POST_ADD_ITEM_DESC)` 형태로 연결해  
 Swagger UI에서 구조적이고 가독성 있는 문서 형태로 제공함.
 
 ---
 
-**Q: 최종 구조는 어떻게 정리되었나요?**  
+**Q: 최종 구조는 어떻게 정리되나요?**  
 **A:**  
 - `CartController` CRUD 완성 (`GET`, `POST`, `PATCH`, `DELETE`)  
 - `AuthValidator` 도입으로 권한 검증 공통화  
