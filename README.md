@@ -266,235 +266,189 @@ PageResponse를 공통으로 사용하여 페이징 응답 구조의 일관성�
 
 --------------------------------------------------------------------------------------------
 
-## USER API 기능 구현 당시 AI 도움기록
-### 해결하려던 문제
-Spring Boot 환경에서 `UserRepository`, `UserService`, `UserController` 계층을 구성하고  
-전체 사용자 조회, 단일 사용자 조회 API를 구현하는 과정에서  
-데이터 초기화, Optional 처리, Swagger 문서화 관련 문제를 해결하고자 함.
+## 👤 USER API 기능 구현 당시 AI 도움기록
+
+### 🧭 해결하려던 문제
+Spring Boot 환경에서 `UserRepository`, `UserService`, `UserController` 계층을 구성하고,  
+전체 사용자 조회 및 단일 사용자 조회 API를 구현하는 과정에서  
+데이터 초기화(`data.sql`), Optional 처리, 예외 응답 구조, Swagger 문서화 관련 문제를 해결하고자 함.
 
 ---
 
-### 대화 요약
+### 💬 대화 요약
 
-****Q:** findAll()로 사용자 목록을 조회할 때 반환 타입은 List로 해도 되나요? ** 
-**A:** 맞음. 단, API 응답에서는 `ApiResponseDto<List<UserResponseDto>>` 형태로 감싸  
-일관된 구조를 유지하도록 제안함.
-
----
-
-****Q:** 단일 사용자 조회 시 존재하지 않으면 예외를 던질까요, null 반환이 나을까요?  **
-**A:** 비즈니스 예외(`BusinessException`)로 처리하는 것이 REST 표준에 맞음.  
-→ `userRepository.findById(id).orElseThrow(...)` 형태로 수정.
+**Q: 사용자 목록 조회 시 반환 타입은 어떻게 구성하나요?**  
+**A:** DB 조회 결과는 `List<UserEntity>`로 반환하되,  
+API 응답은 `ApiResponseDto<List<UserResponseDto>>` 형태로 감싸  
+일관된 응답 구조를 유지하도록 제안함.
 
 ---
 
-****Q:** 더미 유저 데이터를 초기화하려면 data.sql을 써도 되나요?  **
-**A:** 가능함. 단, `spring.sql.init.mode=always`와 `ddl-auto=create`를 함께 설정해야  
-애플리케이션 시작 시점에 데이터가 삽입됨.
+**Q: 단일 사용자 조회 시 존재하지 않을 경우 어떻게 처리하나요?**  
+**A:** REST 표준에 따라 null 반환 대신 비즈니스 예외(`BusinessException`)를 발생시키는 것이 적절함.  
+`userRepository.findById(id).orElseThrow(() -> new BusinessException("사용자를 찾을 수 없습니다."))`  
+패턴으로 수정함.
 
 ---
 
-****Q:** Swagger에서 사용자 API를 한 그룹으로 묶고 싶습니다.**  
+**Q: 더미 유저 데이터를 초기화하려면 어떤 설정이 필요한가요?**  
+**A:** `data.sql` 파일 사용 가능.  
+`spring.sql.init.mode=always`와 `ddl-auto=create`를 함께 설정해야  
+애플리케이션 시작 시 테이블 생성 후 데이터 삽입이 정상 동작함.
+
+---
+
+**Q: Swagger에서 사용자 API를 그룹화하려면 어떻게 하나요?**  
 **A:** `@Tag(name = SwaggerTags.USER_NAME, description = SwaggerTags.USER_DESC)`  
-로 설정하면 Swagger UI에서 “👤 사용자 API” 그룹으로 표시됨.
+를 컨트롤러 상단에 선언해 Swagger UI에서 “👤 사용자 API”로 구분되도록 설정함.
 
 ---
 
-****Q:** Optional이 비어 있을 때 404 응답을 주려면 어떻게 하나요?**  
-**A:** `Optional.map(...).orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)... )`  
-패턴으로 처리하거나, Service 단에서 예외를 던져 ControllerAdvice에서 처리하도록 제안함.
+**Q: Optional이 비어 있을 때 404 응답을 반환하려면 어떻게 하나요?**  
+**A:** Controller 레벨에서 `ResponseEntity.status(HttpStatus.NOT_FOUND)`를 직접 반환하거나,  
+Service 레벨에서 예외를 던지고 `@ControllerAdvice`를 통해 일괄 처리하는 방식을 권장함.
 
 ---
 
-****Q:** `User`라는 테이블명이 충돌납니다.  **
-**A:** `@Table(name = "users")`로 변경하거나, H2 DB 실행 시 `MODE=MySQL` 설정을 추가하라고 안내함.
+**Q: `User` 테이블명 충돌 문제는 어떻게 해결했나요?**  
+**A:** H2/MySQL 모두 `user`는 예약어이므로,  
+`@Table(name = "users")`로 테이블명을 변경하여 충돌을 방지함.
 
 ---
 
-****Q:** H2 DB로 테스트 시 한글 데이터가 깨집니다.**  
-**A:** `spring.datasource.url`에 `characterEncoding=UTF-8`과  
-`serverTimezone=Asia/Seoul` 옵션을 추가하도록 안내함.
+**Q: 테스트 환경에서 한글 데이터가 깨지는 문제를 해결하려면?**  
+**A:** `spring.datasource.url` 설정에  
+`characterEncoding=UTF-8` 및 `serverTimezone=Asia/Seoul` 옵션을 추가하여 해결함.
 
 ---
 
-### 최종 적용 결과
+### ✅ 최종 적용 결과
 - `GET /api/users` → 전체 사용자 목록 조회  
-- `GET /api/users/{id}` → 단일 사용자 조회 (404 예외 처리 포함)  
-- Swagger 그룹화 및 응답 DTO 일원화  
-- 더미 데이터 자동 삽입(data.sql) 정상 작동  
-
----
-
-✔️ **AI 사용 목적:** Controller·Service 설계, 예외 처리 구조 정리, Swagger 문서화  
-✔️ **활용 범위:** 계층 간 역할 분리, DTO 변환 로직, 예외처리 설계  
-✔️ **대표 프롬프트 예시:**  
-- “Optional이 비어 있으면 어떤 응답을 주는 게 좋을까?”  
-- “Swagger 그룹은 어떻게 나누는 게 맞을까?”  
-- “User 테이블명 충돌을 해결하려면 어떻게 해야 해?”
-
---------------------------------------------------------------------------------------------
-
-## PRODUCT테이블 상품 목록 API기능 구현 당시 AI 도움기록
-## 해결하려던 문제
-Spring Boot 환경에서 `ProductRepository`, `ProductService`, `ProductController`의 계층 구조를 구성하고,  
-QueryDSL 기반의 상품 검색 기능(`searchProducts`)과 상세 조회 기능(`findById`)을 구현 및 테스트하는 과정에서  
-검색 조건 처리, 테스트 데이터 검증, QueryDSL 동작 검증 등 다양한 이슈를 해결하고자 함.
-
----
-
-## 대화 요약
-
-### Q: ProductControllerTest에서 service를 호출하는 이유가 뭔가요?
-**A:** 컨트롤러 테스트는 실제 HTTP 요청 흐름을 검증하기 위해 `MockMvc`를 사용하고,  
-내부 로직은 `@MockBean`으로 모킹하여 컨트롤러만 독립적으로 검증하는 구조가 맞다고 설명함.
-
----
-
-### Q: ProductServiceTest와 ControllerTest의 차이는 무엇인가요?
-**A:** `ServiceTest`는 비즈니스 로직(쿼리 실행, 변환, 트랜잭션)을 단위로 검증하고,  
-`ControllerTest`는 요청/응답(JSON 직렬화 포함)을 검증하는 통합 테스트임을 구분함.
-
----
-
-### Q: Repository 테스트는 꼭 필요한가요?
-**A:** 필요함. 특히 QueryDSL로 작성한 커스텀 쿼리(`searchProducts`)는  
-JPQL 구문, 조건 빌더(`BooleanBuilder`)가 올바르게 작동하는지 검증이 중요하다고 설명함.
-
----
-
-### Q: Repository에 `save()`가 없는데 테스트는 어떻게 하나요?
-**A:** Repository 단위 테스트에서는 `EntityManager.persist()`를 직접 사용하거나  
-`@DataJpaTest` 환경에서 H2 인메모리 DB로 `persist()` + `flush()`를 통해 테스트 데이터를 삽입하도록 안내함.
-
----
-
-### Q: 테스트 환경 분리용 `application-test.yml`을 써도 되나요?
-**A:** 가능함. `spring.datasource.url=jdbc:h2:mem:testdb` 와  
-`spring.jpa.hibernate.ddl-auto=create-drop` 설정을 적용해 테스트 시 DB를 자동 생성/삭제하도록 구성함.
-
----
-
-### Q: `No qualifying bean of type 'ProductRepository'` 오류가 납니다.
-**A:** 테스트 클래스에 `@SpringBootTest` 또는 `@DataJpaTest`를 추가하고,  
-`@ActiveProfiles("test")`로 테스트 프로필을 활성화해야 Repository Bean이 로드된다고 안내함.
-
----
-
-### Q: `TransactionRequiredException`이 발생합니다.
-**A:** `EntityManager.persist()`는 트랜잭션이 필요하므로  
-테스트 클래스에 `@Transactional`을 추가해야 한다고 설명함.
-
----
-
-### Q: 공백 제거 로직 때문에 검색이 안 맞습니다.
-**A:** Repository 내부에서 `replaceAll("\\s+", "")`로 공백 제거 후 검색하므로,  
-테스트 시 `"아이폰15"`처럼 공백 없는 문자열로 입력해야 매칭된다고 안내함.
-
----
-
-### Q: `"상품명 검색이 대소문자 구분 없이 동작해야 한다"` 테스트에서 공백 검증은 왜 안 하나요?
-**A:** 공백 제거 로직이 이미 존재하므로 별도 공백 테스트는 의미 없다고 분석함.
-
----
-
-### Q: `"카테고리와 가격 범위 조건으로 필터링"` 외에 상품명 조건도 같이 검증해야 하나요?
-**A:** 맞음. 단일 조건뿐 아니라 `"카테고리 + 상품명 + 가격 범위"` 복합 조건 테스트를 추가하는 것이 바람직하다고 제안함.
-
----
-
-### Q: `"searchProducts_withCategoryPriceAndName"` 테스트가 실패합니다. (expected:1 but was:0)
-**A:** `"아이폰 15"`가 `"아이폰15"`로 변환되면서 일치하지 않는 문제임.  
-검색어를 `"아이폰15"`로 수정해 일관성 있게 맞추도록 안내함.
-
----
-
-### Q: 최종적으로 테스트 코드는 이렇게 구현 하면 되나요?
-**A:** 맞음. Repository의 검색 로직(`searchProducts`)과 일치하도록  
-카테고리, 상품명, 가격 조건을 조합한 복합 테스트를 작성하여  
-데이터 매칭과 검색 결과의 일관성을 검증하는 형태로 마무리함.
-
-
---------------------------------------------------------------------------------------------
-
-## CART테이블 사용자별 장바구니 API 기능 구현 당시 AI 도움기록
-## 해결하려던 문제
-사용자별 장바구니(`CartEntity`)와 장바구니 상품(`CartItemEntity`)의 CRUD 기능을 구현하며,  
-상품 중복 처리, 권한 검증, 연관 관계 매핑, 공통 검증 유틸 설계 등  
-비즈니스 로직과 RESTful 구조를 정립하고자 함.
-
----
-
-## 대화 요약
-
-### Q: 장바구니 데이터 구조는 어떻게 설계하는 것이 효율적인가요?
-**A:** `UserEntity`–`CartEntity`–`CartItemEntity`–`ProductEntity`의 1:N:N 관계로 구성.  
-각 사용자별로 하나의 장바구니를 두고, 장바구니 내 다수의 상품 아이템을 관리하도록 설계함.
-
----
-
-### Q: 장바구니에 상품을 추가할 때, 중복 상품은 어떻게 처리하나요?
-**A:** 동일한 상품이 이미 존재하면 수량(`quantity`)을 1 증가시키고,  
-없을 경우 새 `CartItemEntity`를 생성하여 `EntityManager.persist()`로 저장.  
-비즈니스 로직은 `addOrUpdateCartItem()`으로 통합 관리함.
-
----
-
-### Q: 수량 변경 로직은 어떻게 구성했나요?
-**A:** `PATCH /users/{userId}/carts/{cartId}/items/{cartItemId}` API에서  
-`@Valid` DTO(`@Min(1)`)를 통해 유효성 검증 후 수량을 갱신.  
-DB 반영은 `entityManager.flush()` + `refresh()`로 일관성 유지함.
-
----
-
-### Q: 개별 상품 삭제와 장바구니 전체 삭제는 어떻게 구분하나요?
-**A:**  
-- **개별 상품 삭제:** `DELETE /users/{userId}/carts/{cartId}/items/{cartItemId}`  
-- **전체 장바구니 삭제:** `DELETE /users/{userId}/carts/{cartId}`  
-두 엔드포인트를 분리하여 관리하며,  
-각각 `deleteCartItem()`과 `deleteEntireCart()` 서비스 메서드로 구현함.
-
----
-
-### Q: 사용자 권한 검증은 어떻게 처리하나요?
-**A:** 모든 장바구니 접근 시 요청 `userId`와 엔티티의 `userId`를 비교.  
-공통 유틸 `AuthValidator.validateOwnership()`을 도입해  
-`if`문 대신 예외(`BusinessException`)로 일관성 있게 처리함.
-
----
-
-### Q: Spring Security 없이도 이 권한 검증이 충분한가요?
-**A:** 과제 범위 내에서는 유저 인증 로직이 없으므로,  
-해당 유틸 기반 검증이 현실적인 접근이며  
-실서비스에서는 `@PreAuthorize` 또는 Security Context 기반 검증으로 대체 가능함.
-
----
-
-### Q: Swagger 문서에서 요청·응답 예시를 명시하고 싶습니다.
-**A:** `SwaggerTags` 상수에 HTML `<pre>` 블록으로 JSON 예시를 포함시켜  
-`@Operation(description = SwaggerTags.CART_POST_ADD_ITEM_DESC)` 형태로 연결.  
-Swagger UI에서 가독성 높게 표시되도록 구성함.
-
----
-
-## 최종 적용 결과
-- `CartController` CRUD 엔드포인트 완성 (`GET`, `POST`, `PATCH`, `DELETE`)  
-- `AuthValidator` 도입으로 공통 권한 검증 구조 확립  
-- 중복 상품 처리 및 수량 관리 로직 명확화  
-- `BusinessException` 기반의 전역 예외 처리 일관성 확보  
-- `SwaggerTags`를 활용한 문서 자동화 및 요청 예시 표시 완성  
+- `GET /api/users/{id}` → 단일 사용자 상세 조회 (404 예외 처리 포함)  
+- Swagger 그룹화 및 통합 응답 DTO 적용  
+- `data.sql` 기반 더미 유저 자동 삽입 정상 작동  
 
 ---
 
 ✔️ **AI 사용 목적:**  
-비즈니스 로직 설계 보완, 권한 검증 유틸 구조화, RESTful API 경로 및 Swagger 문서 개선  
+Controller·Service 계층 설계 정립, 예외 처리 구조 개선, Swagger 문서 자동화  
 
 ✔️ **활용 범위:**  
-서비스 로직 리팩토링, 공통 예외 처리, Swagger 문서화, 장바구니 데이터 구조 설계  
+DTO 변환, 예외 응답 표준화, 데이터 초기화 설정, 문서화 구조 설계  
 
 ✔️ **대표 프롬프트 예시:**  
-- “중복 상품 추가 시 수량만 증가시키려면 어떤 로직이 적절한가요?”  
-- “장바구니 삭제 로직을 개별/전체로 분리하는 구조가 맞나요?”  
-- “Spring Security 없이 사용자 권한 검증을 어떻게 처리하나요?”
+- “Optional이 비어 있을 때 REST API에서 어떤 응답을 주는 게 맞나요?”  
+- “Swagger에서 사용자 API를 그룹 단위로 관리하려면 어떻게 하나요?”  
+- “User 테이블명 충돌을 H2에서 어떻게 해결하나요?”
+
+--------------------------------------------------------------------------------------------
+
+## 🧩 PRODUCT 테이블 상품 목록 API 기능 구현 당시 AI 도움기록
+### 🧭 해결하려던 문제
+Spring Boot 환경에서 `ProductRepository`, `ProductService`, `ProductController` 계층을 구성하고,  
+QueryDSL 기반의 상품 검색(`searchProducts`) 및 상세 조회(`findById`) 기능을 구현·테스트하는 과정에서  
+검색 조건 처리, 테스트 데이터 검증, QueryDSL 동작 검증 관련 이슈를 해결하고자 함.
+
+---
+
+### 💬 대화 요약
+
+**Q: ControllerTest와 ServiceTest의 차이는 무엇인가요?**  
+**A:** `ControllerTest`는 HTTP 요청/응답 흐름과 JSON 직렬화를 검증하는 통합 테스트,  
+`ServiceTest`는 비즈니스 로직(쿼리 실행·변환·트랜잭션)을 단위로 검증하는 구조라고 설명함.
+
+---
+
+**Q: Repository 테스트는 꼭 필요한가요?**  
+**A:** 필요함. QueryDSL 기반의 커스텀 쿼리(`searchProducts`)의 JPQL 구문과 조건 빌더(`BooleanBuilder`)가  
+정상 작동하는지 검증하는 것이 핵심임.
+
+---
+
+**Q: 테스트 환경은 어떻게 분리하나요?**  
+**A:** `application-test.yml`을 별도로 구성하여  
+`jdbc:h2:mem:testdb`와 `ddl-auto=create-drop` 설정으로 테스트 DB를 독립적으로 운용함.
+
+---
+
+**Q: 공백·대소문자 처리로 검색이 안 맞습니다.**  
+**A:** Repository 내부에서 `replaceAll("\\s+", "")`로 공백 제거 로직이 존재하므로,  
+테스트에서도 `"아이폰15"`와 같이 동일 규칙을 적용해야 일관성 있는 결과를 얻을 수 있음.
+
+---
+
+**Q: 복합 검색 조건 테스트는 어떻게 구성하나요?**  
+**A:** `카테고리`, `상품명`, `가격 범위`를 모두 포함한 복합 조건 테스트를 추가해  
+검색 결과의 정확도와 QueryDSL 필터링 로직을 함께 검증하도록 설계함.
+
+---
+
+**Q: 최종 테스트 검증 방향은 어떻게 정리되었나요?**  
+**A:** Repository 로직(`searchProducts`)과 동일하게 조건 조합 기반 테스트를 구성하고,  
+데이터 매칭 및 검색 결과의 일관성을 검증하는 형태로 마무리함.
+
+---
+
+## 🛒 CART 테이블 사용자별 장바구니 API 기능 구현 당시 AI 도움기록
+
+### 🧭 해결하려던 문제
+사용자별 장바구니(`CartEntity`)와 장바구니 상품(`CartItemEntity`)의 CRUD 기능 구현 중  
+상품 중복 처리, 권한 검증, 공통 검증 유틸 설계, RESTful 경로 구조 확립 등  
+비즈니스 로직 전반의 일관성과 안정성을 확보하고자 함.
+
+---
+
+### 💬 대화 요약
+
+**Q: 장바구니 구조는 어떻게 설계했나요?**  
+**A:** `UserEntity` → `CartEntity` → `CartItemEntity` → `ProductEntity` 구조로 1:N 관계를 설정.  
+사용자별 장바구니에서 다수의 상품을 관리하는 형태로 구현함.
+
+---
+
+**Q: 동일 상품 추가 시 중복 처리는 어떻게 하나요?**  
+**A:** 동일 상품이 이미 존재하면 `quantity + 1`로 수량 증가,  
+없으면 새 `CartItemEntity` 생성 후 `EntityManager.persist()`로 저장하도록 설계함.
+
+---
+
+**Q: 수량 수정과 삭제 API는 어떻게 구분했나요?**  
+**A:**  
+- **수량 수정:** `PATCH /users/{userId}/carts/{cartId}/items/{cartItemId}`  
+- **상품 삭제:** `DELETE /users/{userId}/carts/{cartId}/items/{cartItemId}`  
+- **장바구니 전체 삭제:** `DELETE /users/{userId}/carts/{cartId}`  
+로 구분하여 설계함.
+
+---
+
+**Q: 권한 검증은 어떻게 처리했나요?**  
+**A:** `AuthValidator.validateOwnership(entityUserId, requestUserId, targetName)`  
+공통 유틸을 추가하여 `if`문 대신 예외(`BusinessException`) 기반 검증으로 통일함.  
+Spring Security 미적용 환경에서도 최소한의 접근 제어가 가능하도록 설계함.
+
+---
+
+**Q: Swagger 문서는 어떻게 구성했나요?**  
+**A:** `SwaggerTags` 클래스에 각 API 설명과 JSON 예시를 HTML `<pre>` 블록으로 작성하고,  
+`@Operation(description = SwaggerTags.CART_POST_ADD_ITEM_DESC)` 형태로 연결해  
+Swagger UI에서 구조적이고 가독성 있는 문서 형태로 제공함.
+
+---
+
+**Q: 최종 구조는 어떻게 정리되었나요?**  
+**A:**  
+- `CartController` CRUD 완성 (`GET`, `POST`, `PATCH`, `DELETE`)  
+- `AuthValidator` 도입으로 권한 검증 공통화  
+- 중복 상품 수량 증가 및 전체 삭제 로직 분리  
+- `SwaggerTags` 기반 API 문서 자동화 완료  
+
+---
+
+✔️ **AI 사용 목적:**  
+Repository·Service 계층 설계 개선, 공통 검증 구조 도입, API 문서 자동화  
+
+✔️ **활용 범위:**  
+비즈니스 로직 정립, 예외 처리 통일, Swagger 문서 정비, RESTful 경로 설계 검증
 
 
 > 💬 본 대화 내용은 AI(ChatGPT)를 활용하여 코드 설계, 디버깅, 테스트 개선을 수행한 내역을 정리한 것입니다.
