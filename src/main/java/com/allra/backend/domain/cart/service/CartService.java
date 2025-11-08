@@ -9,7 +9,13 @@ import com.allra.backend.domain.cart.dto.CartDto;
 import com.allra.backend.domain.cart.entity.CartEntity;
 import com.allra.backend.domain.cart.entity.CartItemEntity;
 import com.allra.backend.domain.cart.repository.CartRepository;
+import com.allra.backend.domain.product.entity.ProductEntity;
+import com.allra.backend.domain.product.repository.ProductRepository;
+import com.allra.backend.domain.user.entity.UserEntity;
+import com.allra.backend.domain.user.repository.UserRepository;
 
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -21,6 +27,10 @@ import lombok.RequiredArgsConstructor;
 public class CartService {
 
     private final CartRepository cartRepository;
+    private final UserRepository userRepository;
+    private final ProductRepository productRepository;
+
+    private final EntityManager entityManager;
 
     /**
      * 사용자 장바구니 조회 (userId 기준)
@@ -52,5 +62,67 @@ public class CartService {
                 .map(CartDto.CartItemsDetailResponseDto::fromEntity)
                 .orElse(null);
     }
+
+    /**
+     * 상품을 장바구니에 추가
+     */
+    @Transactional
+    public CartDto.AddCartItemsResponseDto addProductsToCart(Long userId, CartDto.AddCartItemsRequestDto request) {
+        UserEntity user = userRepository.getByIdOrThrow(userId);
+        ProductEntity product = productRepository.getByIdOrThrow(request.getProductId());
+        
+        product.validateStock(request.getQuantity());
+
+        CartEntity cart = getOrCreateCart(user);
+        addOrUpdateCartItem(cart, product, request.getQuantity());
+
+        entityManager.flush();
+        entityManager.refresh(cart);
+
+        return CartDto.AddCartItemsResponseDto.fromEntity(cart);
+    }
+
+    /**
+     * 장바구니 없으면 생성 / 있으면 반환
+     */
+    private CartEntity getOrCreateCart(UserEntity user) {
+        return cartRepository.findUserCartsByUserId(user.getId()).stream()
+                .findFirst()
+                .orElseGet(() -> {
+                    CartEntity newCart = CartEntity.builder()
+                            .user(user)
+                            .build();
+                    entityManager.persist(newCart);
+                    return newCart;
+                });
+    }
+
+    /**
+     * 장바구니에 상품 추가 또는 수량 증가
+     */
+    private void addOrUpdateCartItem(CartEntity cart, ProductEntity product, int quantity) {
+        cart.getItems().stream()
+                .filter(i -> i.getProduct().getId().equals(product.getId()))
+                .findFirst()
+                .ifPresentOrElse(
+                        item -> { // 이미 존재 → 수량 증가
+                            int newQty = item.getQuantity() + quantity;
+                            product.validateStock(newQty);
+                            item.setQuantity(newQty);
+                        },
+                        () -> { // 없으면 새로 추가
+                            CartItemEntity newItem = CartItemEntity.builder()
+                                    .cart(cart)
+                                    .product(product)
+                                    .quantity(quantity)
+                                    .build();
+                            cart.getItems().add(newItem);
+                            entityManager.persist(newItem);
+                        }
+                );
+    }
+
+
+    
 
 }

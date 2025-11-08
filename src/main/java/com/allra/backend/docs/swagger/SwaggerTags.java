@@ -16,7 +16,7 @@ public final class SwaggerTags {
      * ========================================================== */
     public static final String USER_NAME = "👤 사용자 API";
     public static final String USER_DESC =
-            "<b>회원 정보 조회 관련 엔드포인트</b><br>" +
+            "<b>회원 정보 조회 관련 API엔드포인트</b><br>" +
             "전체 사용자 목록과 ID 기반 상세 조회 기능을 제공합니다.<br>" +
             "더미 데이터: <b>5개</b>";
 
@@ -39,7 +39,10 @@ public final class SwaggerTags {
      * ========================================================== */
     public static final String PRODUCT_NAME = "📦 상품 API";
     public static final String PRODUCT_DESC =
+            "<b>상품 목록 및 상세 조회 관련 API엔드포인트</b><br>" +
+
             "<b>상품 목록 및 상세 조회 관련 엔드포인트</b><br>" +
+
             "<b>카테고리</b>, <b>상품명</b>, <b>가격 범위</b> 기반 검색과 페이징 기능을 제공합니다.";
 
     public static final String PRODUCT_GET_ALL_DESC = """
@@ -86,5 +89,17 @@ public final class SwaggerTags {
         장바구니 내 개별 상품(cartItemId)을 기준으로 정보를 조회합니다.<br>
         <b>상품명</b>, <b>브랜드</b>, <b>가격</b>, <b>품절 여부</b>, <b>수량</b> 등의 상세 정보를 제공합니다.<br>
         반환 형식: <code>ApiResponseDto&lt;CartItemsDetailResponseDto&gt;</code>
+        """;
+
+    public static final String CART_POST_ADD_ITEM_DESC = """
+        ➕ <b>상품을 장바구니에 추가</b><br>
+        사용자의 장바구니에 상품을 추가하거나, 이미 존재하는 상품의 수량을 증가시킵니다.<br><br>
+        ✅ <b>요청 예시</b>:<br>
+        <pre>{
+            "productId": 1001,
+            "quantity": 2
+        }</pre>
+        ✅ <b>응답 형식</b>: <code>ApiResponseDto&lt;AddCartItemsResponseDto&gt;</code><br><br>
+        성공 시 <code>201 Created</code> 반환.
         """;
 }

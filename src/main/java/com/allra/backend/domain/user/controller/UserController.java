@@ -31,11 +31,11 @@ public class UserController {
     private final UserService userService;
 
     /**
-     * 전체 사용자 조회
+     * 전체 사용자 목록 조회
      */
     @GetMapping
     @Operation(
-        summary = "전체 사용자 목록 조회",
+        summary = "전체 사용자 조회",
         description = SwaggerTags.USER_GET_ALL_DESC
     )
     public ApiResponseDto<List<UserDto.UserResponseDto>> getAllUsers() {
@@ -44,11 +44,11 @@ public class UserController {
     }
 
     /**
-     * 사용자 상세 조회
+     * 사용자 단일 조회 (ID 기준)
      */
     @GetMapping("/{id}")
     @Operation(
-        summary = "사용자 상세 조회",
+        summary = "사용자 단일 조회",
         description = SwaggerTags.USER_GET_DETAIL_DESC
     )
     public ResponseEntity<ApiResponseDto<UserDto.UserResponseDto>> getUserById(@PathVariable Long id) {

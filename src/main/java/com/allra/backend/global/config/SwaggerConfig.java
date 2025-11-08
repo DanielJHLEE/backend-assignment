@@ -1,12 +1,10 @@
 package com.allra.backend.global.config;
 
-import com.allra.backend.docs.swagger.SwaggerTags;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.tags.Tag;
 
 @Configuration
 public class SwaggerConfig {
