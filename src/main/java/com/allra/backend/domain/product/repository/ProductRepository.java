@@ -89,4 +89,17 @@ public class ProductRepository {
         return product;
     }
 
+    /**
+     * 상품 저장 또는 업데이트
+     */
+    public ProductEntity save(ProductEntity product) {
+        if (product.getId() == null) {
+            entityManager.persist(product);
+            return product;
+        } else {
+            return entityManager.merge(product);
+        }
+    }
+
+
 }

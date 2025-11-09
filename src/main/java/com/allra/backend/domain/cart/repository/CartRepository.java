@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class CartRepository {
 
     private final JPAQueryFactory queryFactory;
-    private final EntityManager entityManager;
+	private final EntityManager entityManager;
 
     /**
      * 사용자 장바구니 조회
@@ -89,8 +89,39 @@ public class CartRepository {
         );
     }
 
-    
+    /** 사용자 전체 장바구니 비우기 (결제 완료 시 호출) */
+    public void deleteAllByUserId(Long userId) {
+        QCartEntity qCart = QCartEntity.cartEntity;
 
+        long deletedCount = queryFactory.delete(qCart)
+                .where(qCart.user.id.eq(userId))
+                .execute();
+
+        if (deletedCount == 0) {
+            throw new IllegalStateException("삭제할 장바구니가 없습니다. userId=" + userId);
+        }
+    }
+
+	/** 장바구니 삭제 (유저 검증 포함) */
+    public void deleteByUser(Long userId, CartEntity cart) {
+        QCartEntity qCart = QCartEntity.cartEntity;
+
+        long deleted = queryFactory.delete(qCart)
+                .where(
+                        qCart.id.eq(cart.getId())
+                        .and(qCart.user.id.eq(userId))
+                )
+                .execute();
+
+        if (deleted == 0) {
+            throw new IllegalStateException("해당 사용자의 장바구니가 아닙니다.");
+        }
+    }
+
+    /** 단순 삭제 (검증 불필요 시) */
+    public void delete(CartEntity cart) {
+        entityManager.remove(entityManager.contains(cart) ? cart : entityManager.merge(cart));
+    }
 
 
 }
