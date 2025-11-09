@@ -24,7 +24,7 @@ public class MockApiCancelDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class MockCancelRequest {
-        private Long orderId;
+        private String orderId;
     }
 
     /**

@@ -63,7 +63,7 @@ public class OrderController {
         description = SwaggerTags.ORDER_PAYMENT_REQUEST_DESC
     )
     public ResponseEntity<PaymentResultDto.OrderResultResponse> processPayment(
-            @PathVariable Long orderId) {
+            @PathVariable String orderId) {
 
         PaymentResultDto.OrderResultResponse response = orderService.processPayment(orderId);
         return ResponseEntity.ok(response);
@@ -100,7 +100,7 @@ public class OrderController {
         description = SwaggerTags.ORDER_CANCEL_DESC
     )
     public ResponseEntity<PaymentResultDto.OrderCancelResponse> cancelOrder(
-            @PathVariable Long orderId) {
+            @PathVariable String orderId) {
 
         PaymentResultDto.OrderCancelResponse response = orderService.cancelOrder(orderId);
         return ResponseEntity.ok(response);

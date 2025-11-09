@@ -208,36 +208,183 @@ public final class SwaggerTags {
 
 
     /* ==========================================================
-     * 🧩 Mock API (외부 시뮬레이션)
-     * ========================================================== */
+    * 🧩 Mock API (외부 시뮬레이션)
+    * ========================================================== */
     public static final String MOCK_NAME = "🧩 Mock 결제 / 주문 API";
-    public static final String MOCK_DESC =
-            "<b>외부 PG사 또는 주문 서버를 시뮬레이션하는 Mock API</b><br>" +
-            "테스트 환경에서 결제, 주문 생성, 취소 요청을 흉내내며, <br>" +
-            "실제 결제 연동 구조와 동일한 응답 구조를 제공합니다.";
+    public static final String MOCK_DESC = """
+        <b>외부 PG사 및 주문 서버를 시뮬레이션하는 Mock API</b><br>
+        주문 생성 → 결제 요청 → 결제 상태 조회 → 주문 취소의 전체 흐름을 테스트할 수 있습니다.<br><br>
+
+        ⚙️ <b>Mock 데이터 구조</b><br>
+        - 모든 결제 상태는 <code>ConcurrentHashMap&lt;orderId, status&gt;</code> 에 임시 저장됩니다.<br>
+        - 서버 재시작 시 초기화되며, DB에는 저장되지 않습니다.<br>
+        - 등록되지 않은 <code>orderId</code> 조회/취소 시 <code>NOT_FOUND</code> 반환.<br><br>
+
+        🔁 <b>테스트 순서</b><br>
+        ① 주문 생성 → ② 결제 요청(PENDING) → ③ 결제 상태 조회(SUCCESS/FAILED) → ④ 주문 취소(CANCELED)<br><br>
+
+        💡 <b>참고</b><br>
+        각 단계는 독립 호출 가능하지만, 실제 테스트 시 위 순서를 따르는 것을 권장합니다.
+        """;
 
     public static final String MOCK_ORDER_CREATE_DESC = """
         📦 <b>Mock 주문 생성</b><br>
-        - 요청 시 주문번호 자동 생성 (ORD_yyyyMMdd_HHmmss_random)<br>
-        - 상태값: CREATED
+        - 사용자 ID(<code>userId</code>), 상품 목록(<code>products</code>), 총 결제 금액(<code>amount</code>)을 기반으로 주문을 생성합니다.<br>
+        - 요청 시 주문번호(<code>ORD_yyyyMMdd_HHmmss_random</code>)가 자동 생성되며, 상태는 항상 <code>CREATED</code>로 반환됩니다.<br><br>
+
+        ⚙️ <b>요청 유효성 규칙</b><br>
+        • <code>userId</code>가 null 또는 0 이하 → <code>INVALID_USER</code><br>
+        • <code>products</code>가 비어있거나 null → <code>INVALID_PRODUCT_LIST</code><br><br>
+
+        📤 <b>Request Example</b><br>
+        <pre>{
+        "userId": 1,
+        "products": [
+            {
+            "id": 1,
+            "name": "티셔츠",
+            "brand": "나이키",
+            "category": "의류",
+            "price": 45000,
+            "stock": 5,
+            "soldOut": false
+            },
+            {
+            "id": 2,
+            "name": "운동화",
+            "brand": "아디다스",
+            "category": "신발",
+            "price": 90000,
+            "stock": 3,
+            "soldOut": false
+            }
+        ],
+        "amount": 135000
+        }</pre><br>
+
+        📥 <b>Response Example</b><br>
+        ✅ <i>정상 요청</i><br>
+        <pre>{
+        "orderId": "ORD_20251110_003247_171169",
+        "status": "CREATED",
+        "message": "Order created successfully for userId=1 with 2 product(s). Total amount: 135000"
+        }</pre><br>
+
+        ❌ <i>유효하지 않은 사용자 ID</i><br>
+        <pre>{
+        "orderId": null,
+        "status": "INVALID_USER",
+        "message": "Invalid userId. Order cannot be created."
+        }</pre><br>
+
+        ❌ <i>상품 목록 없음</i><br>
+        <pre>{
+        "orderId": null,
+        "status": "INVALID_PRODUCT_LIST",
+        "message": "No products provided. At least one product is required."
+        }</pre>
         """;
 
     public static final String MOCK_PAYMENT_DESC = """
         💳 <b>Mock 결제 요청</b><br>
-        - 최초 상태: PENDING<br>
-        - 8초 후 80% 확률로 SUCCESS / 20% 확률로 FAILED 로 전환<br>
-        - 내부적으로 ConcurrentHashMap 에 상태 저장
+        - 주문번호(<code>orderId</code>)와 결제 금액(<code>amount</code>)을 전달하여 결제 프로세스를 시뮬레이션합니다.<br>
+        - 요청 시 유효성 검증이 수행됩니다.<br>
+        &nbsp;&nbsp;• <code>orderId</code>가 비어 있으면 → <code>INVALID_ORDER_ID</code><br>
+        &nbsp;&nbsp;• <code>amount ≤ 0</code>이면 → 즉시 <code>FAILED</code><br><br>
+        - 정상 요청의 경우:<br>
+        &nbsp;&nbsp;① 즉시 <code>PENDING</code> 상태로 응답<br>
+        &nbsp;&nbsp;② 약 8~15초 후 내부적으로 <code>SUCCESS</code> (80%) / <code>FAILED</code> (20%) 로 전환됩니다.<br><br>
+
+        📤 <b>Request Example</b><br>
+        <pre>{
+        "orderId": "ORD_20251110_003247_171169",
+        "amount": 135000
+        }</pre><br>
+
+        📥 <b>Response Example</b><br>
+        ✅ <i>정상 요청 (PENDING)</i><br>
+        <pre>{
+        "status": "PENDING",
+        "transactionId": "txn_5f3a6b82",
+        "message": "Payment request for orderId=ORD_20251110_003247_171169 received. Processing..."
+        }</pre>
+        
+        ❌ <i>유효하지 않은 주문번호</i><br>
+        <pre>{
+        "status": "INVALID_ORDER_ID",
+        "transactionId": "txn_7b9d83ac",
+        "message": "Invalid orderId. Payment cannot be processed."
+        }</pre>
+
+        ❌ <i>잘못된 결제 금액 (0 이하)</i><br>
+        <pre>{
+        "status": "FAILED",
+        "transactionId": "txn_2e7f9a01",
+        "message": "Payment failed immediately: invalid amount (0)"
+        }</pre>
         """;
 
     public static final String MOCK_PAYMENT_RESULT_DESC = """
         🔍 <b>Mock 결제 상태 조회</b><br>
-        - 현재 결제 상태 (PENDING / SUCCESS / FAILED) 를 반환<br>
-        - 실제 PG사의 비동기 결제완료 조회를 시뮬레이션함
+        - 특정 주문번호(<code>orderId</code>)의 현재 결제 상태를 반환합니다.<br>
+        - 상태는 결제 요청 시점 이후 내부적으로 비동기 전환됩니다.<br><br>
+        - ⚙️ 결제 요청 시 등록된 <code>paymentStatusMap</code> 기준으로 조회되며, 존재하지 않으면 <code>NOT_FOUND</code> 반환.<br><br>
+
+        📘 <b>가능한 상태값</b><br>
+        • <code>PENDING</code> → 결제 진행 중<br>
+        • <code>SUCCESS</code> → 결제 완료<br>
+        • <code>FAILED</code> → 결제 실패<br>
+        • <code>NOT_FOUND</code> → 존재하지 않는 주문 ID<br><br>
+
+        📥 <b>Response Example</b><br>
+        ✅ <i>결제 성공</i><br>
+        <pre>{
+        "status": "SUCCESS",
+        "transactionId": "txn_5f3a6b82",
+        "message": "Payment status for orderId=ORD_20251110_003247_171169 is SUCCESS"
+        }</pre>
+
+        ❌ <i>주문 ID 미존재</i><br>
+        <pre>{
+        "status": "NOT_FOUND",
+        "transactionId": "txn_ORD_20251110_003247_171169",
+        "message": "Payment status for orderId=ORD_20251110_003247_171169 is NOT_FOUND"
+        }</pre>
         """;
 
     public static final String MOCK_ORDER_CANCEL_DESC = """
-        ❌ <b>Mock 주문 취소</b><br>
-        - 단순히 CANCELED 상태를 반환<br>
-        - 실제 취소 API의 구조를 모사하여 테스트용으로 제공
-        """;
+    ❌ <b>Mock 주문 취소</b><br>
+    - 지정된 주문번호(<code>orderId</code>)를 기준으로 주문을 취소합니다.<br>
+    - 현재 결제 상태에 따라 결과가 달라집니다.<br><br>
+
+    🔎 <b>상태별 처리 규칙</b><br>
+    • <code>PENDING</code> → 취소 가능 → <code>CANCELED</code><br>
+    • <code>SUCCESS</code> → 취소(환불 개념) 가능 → <code>CANCELED</code><br>
+    • <code>FAILED</code> → 이미 결제가 실패했으므로 취소 불가 → <code>CANNOT_CANCEL</code><br>
+    • <code>NOT_FOUND</code> → 주문 ID 미존재 → <code>NOT_FOUND</code><br><br>
+
+    📤 <b>Request Example</b><br>
+    <pre>{
+      "orderId": "ORD_20251110_003247_171169"
+    }</pre><br>
+
+    📥 <b>Response Example</b><br>
+    ✅ <i>성공 (PENDING / SUCCESS 상태 취소 시)</i><br>
+    <pre>{
+      "status": "CANCELED",
+      "message": "Order canceled successfully for orderId=ORD_20251110_003247_171169"
+    }</pre>
+    
+    ❌ <i>취소 불가 (FAILED 상태)</i><br>
+    <pre>{
+      "status": "CANNOT_CANCEL",
+      "message": "OrderId=ORD_20251110_003247_171169 cannot be canceled because payment has already failed."
+    }</pre>
+    
+    ❌ <i>존재하지 않는 주문</i><br>
+    <pre>{
+      "status": "NOT_FOUND",
+      "message": "OrderId=ORD_20251110_003247_171169 not found. Cancel request ignored."
+    }</pre>
+    """;
 }

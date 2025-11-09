@@ -33,18 +33,6 @@ public class MockApiController {
 
     private final MockApiService mockApiService;
 
-    /** 
-     * 결제 결과 조회 Mock API (PENDING / SUCCESS / FAILED 조회용) */
-    @GetMapping("/payment/result/{orderId}")
-    @Operation(
-        summary = "Mock 결제 상태 조회",
-        description = SwaggerTags.MOCK_PAYMENT_RESULT_DESC
-    )
-    public ResponseEntity<MockApiPaymentDto.MockPayResponse> getPaymentResult(@PathVariable Long orderId) {
-        MockApiPaymentDto.MockPayResponse response = mockApiService.getPaymentResult(orderId);
-        return ResponseEntity.ok(response);
-    }
-
     /**
      * 주문 생성 Mock API
      * - OrderStatus: CREATED
@@ -72,6 +60,18 @@ public class MockApiController {
     )
     public ResponseEntity<MockApiPaymentDto.MockPayResponse> processPayment(@RequestBody MockApiPaymentDto.MockPayRequest request) {
         MockApiPaymentDto.MockPayResponse response = mockApiService.processPayment(request);
+        return ResponseEntity.ok(response);
+    }
+
+    /** 
+     * 결제 결과 조회 Mock API (PENDING / SUCCESS / FAILED 조회용) */
+    @GetMapping("/payment/result/{orderId}")
+    @Operation(
+        summary = "Mock 결제 상태 조회",
+        description = SwaggerTags.MOCK_PAYMENT_RESULT_DESC
+    )
+    public ResponseEntity<MockApiPaymentDto.MockPayResponse> getPaymentResult(@PathVariable String orderId) {
+        MockApiPaymentDto.MockPayResponse response = mockApiService.getPaymentResult(orderId);
         return ResponseEntity.ok(response);
     }
 

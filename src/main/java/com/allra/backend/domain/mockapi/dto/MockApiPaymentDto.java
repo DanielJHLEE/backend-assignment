@@ -25,7 +25,7 @@ public class MockApiPaymentDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class MockPayRequest {
-        private Long orderId;
+        private String orderId;
         private int amount;
     }
 

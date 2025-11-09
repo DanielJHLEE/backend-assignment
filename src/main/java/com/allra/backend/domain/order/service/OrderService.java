@@ -19,6 +19,7 @@ import com.allra.backend.domain.user.entity.UserEntity;
 import com.allra.backend.domain.order.repository.OrderRepository;
 
 import com.allra.backend.global.exception.BusinessException;
+import com.allra.backend.global.util.MockIdUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -116,19 +117,22 @@ public class OrderService {
      * - 결제 성공/실패/취소 상태에 따라 재고 및 장바구니 처리
      */
     @Transactional
-    public PaymentResultDto.OrderResultResponse processPayment(Long orderId) {
-        // 1. 주문 조회 (존재 검증)
-        OrderEntity order = orderRepository.findById(orderId)
+    public PaymentResultDto.OrderResultResponse processPayment(String orderId) {
+        // 1.cartService MockIdUtil로 변환 (String → Long)
+        Long dbOrderId = MockIdUtil.toEntityId(orderId);
+
+        // 2. 주문 조회
+        OrderEntity order = orderRepository.findById(dbOrderId)
                 .orElseThrow(() -> new BusinessException("해당 주문을 찾을 수 없습니다."));
 
-        // 2. 결제 금액 조회 (OrderEntity의 totalPrice 사용)
+        // 3. 결제 금액 조회
         int amount = order.getTotalPrice();
 
-        // 3. Mock API 결제 요청
+        // 4. Mock API 결제 요청 (여긴 String 그대로 넘겨야 함)
         PaymentResultDto.OrderResultResponse paymentResponse =
                 paymentService.processPayment(orderId, amount);
 
-        // 4. 결제 상태별 후속 처리
+        // 5. 결제 상태별 처리
         String status = paymentResponse.getStatus().toUpperCase();
 
         switch (status) {
@@ -137,7 +141,7 @@ public class OrderService {
             default -> order.updateStatus(OrderStatus.PENDING);
         }
 
-        // 5. 최종 주문 상태 저장
+        // 6. 최종 주문 상태 저장
         orderRepository.save(order);
 
         return paymentResponse;
@@ -180,7 +184,7 @@ public class OrderService {
     }
 
     /** 4. 주문 취소 요청 */
-    public PaymentResultDto.OrderCancelResponse cancelOrder(Long orderId) {
+    public PaymentResultDto.OrderCancelResponse cancelOrder(String orderId) {
         return paymentService.cancelOrder(orderId);
     }
 
