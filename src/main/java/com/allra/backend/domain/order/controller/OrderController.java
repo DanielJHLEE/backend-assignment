@@ -81,7 +81,7 @@ public class OrderController {
         description = SwaggerTags.ORDER_PAYMENT_RESULT_DESC
     )
     public ResponseEntity<PaymentResultDto.OrderResultResponse> checkPaymentResult(
-            @PathVariable Long orderId) {
+            @PathVariable String orderId) {
 
         PaymentResultDto.OrderResultResponse response = orderService.checkPaymentResult(orderId);
         return ResponseEntity.ok(response);

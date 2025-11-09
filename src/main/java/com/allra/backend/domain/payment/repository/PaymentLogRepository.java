@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.allra.backend.domain.payment.entity.PaymentLogEntity;
@@ -27,5 +28,10 @@ public interface PaymentLogRepository extends JpaRepository<PaymentLogEntity, Lo
      * 특정 주문의 가장 최근 결제 로그 1건 조회
      * - 결제 취소 시 금액으로 사용
      */
+    @Query(
+        value = "SELECT * FROM payment_log WHERE order_id = :orderId ORDER BY created_at DESC LIMIT 1",
+        nativeQuery = true
+    )
     Optional<PaymentLogEntity> findLatestByOrderId(Long orderId);
+
 }

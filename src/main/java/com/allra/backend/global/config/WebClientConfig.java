@@ -28,7 +28,6 @@ import reactor.netty.http.client.HttpClient;
 @Configuration
 public class WebClientConfig {
 
-    
     /**
      * application.yml → webclient.mock-base-url 값 주입
      * 환경변수 MOCK_BASE_URL이 설정되어 있으면 우선 적용됨.
@@ -38,6 +37,7 @@ public class WebClientConfig {
 
     @Bean
     public WebClient webClient(WebClient.Builder builder) {
+        log.info("WebClient Base URL: {}", mockBaseUrl);  // 로그로 값 확인
 
         // HTTP 타임아웃 설정
         HttpClient httpClient = HttpClient.create()

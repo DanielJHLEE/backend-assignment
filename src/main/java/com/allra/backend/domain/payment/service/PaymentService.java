@@ -12,16 +12,18 @@ import com.allra.backend.domain.mockapi.dto.MockApiOrderDto;
 import com.allra.backend.domain.mockapi.dto.MockApiPaymentDto;
 import com.allra.backend.domain.order.entity.OrderEntity;
 import com.allra.backend.domain.order.entity.OrderStatus;
+import com.allra.backend.domain.order.repository.OrderRepository;
 import com.allra.backend.domain.payment.dto.PaymentResultDto;
 import com.allra.backend.domain.payment.entity.PaymentLogEntity;
+import com.allra.backend.domain.payment.exception.PaymentErrorCode;
+import com.allra.backend.domain.payment.exception.PaymentException;
 import com.allra.backend.domain.payment.repository.PaymentLogRepository;
 import com.allra.backend.domain.product.entity.ProductEntity;
-import com.allra.backend.global.exception.BusinessException;
-import com.allra.backend.global.util.MockIdUtil;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * PaymentService (로그 기반)
@@ -31,10 +33,13 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentService {
-    private final PaymentLogRepository paymentLogRepository;
-
-    @Value("${MOCK_BASE_URL:${mock.api.base-url:http://localhost:8080}}")
+    
+	private final PaymentLogRepository paymentLogRepository;
+	private final OrderRepository orderRepository;
+    
+	@Value("${MOCK_BASE_URL:${mock.api.base-url:http://localhost:8080}}")
     private String baseUrl;
     private WebClient webClient;
 
@@ -62,8 +67,11 @@ public class PaymentService {
 
 		// 2-1 응답 유효성 검증 (예외 처리 통일)
 		if (mockResponse == null) {
-			throw new BusinessException("Mock 주문 생성 API 응답이 없습니다.");
+			throw new PaymentException(PaymentErrorCode.MOCK_API_RESPONSE_NULL);
 		}
+
+		// 2-2. 여기에 추가
+		orderEntity.setMockOrderId(mockResponse.getOrderId());
 
 		// 3️. 로그 저장 — 실제 OrderEntity를 FK로 사용
 		PaymentLogEntity log = PaymentLogEntity.builder()
@@ -90,38 +98,55 @@ public class PaymentService {
 
     /** 2. 결제 요청 (1단계: PENDING 상태) */
     @Transactional
-    public PaymentResultDto.OrderResultResponse processPayment(String orderId, int amount) {
-        MockApiPaymentDto.MockPayRequest mockRequest = new MockApiPaymentDto.MockPayRequest(orderId, amount);
+	public PaymentResultDto.OrderResultResponse processPayment(String orderId, int amount) {
+		// 1️. 결제 요청 DTO 생성
+		MockApiPaymentDto.MockPayRequest mockRequest = new MockApiPaymentDto.MockPayRequest(orderId, amount);
 
-        MockApiPaymentDto.MockPayResponse mockResponse = webClient.post()
-                .uri("/api/mock/payment")
-                .bodyValue(mockRequest)
-                .retrieve()
-                .bodyToMono(MockApiPaymentDto.MockPayResponse.class)
-                .block();
+		MockApiPaymentDto.MockPayResponse mockResponse;
 
-		// Mock API에서 받은 orderId("ORD_...") → 실제 DB용 Long ID로 변환
-		Long dbOrderId = MockIdUtil.toEntityId(orderId);
+		try {
+			// 2️. WebClient로 내부 Mock API 호출
+			mockResponse = webClient.post()
+					.uri("/api/mock/payment")
+					.bodyValue(mockRequest)
+					.retrieve()
+					.bodyToMono(MockApiPaymentDto.MockPayResponse.class)
+					.block();
 
-        // 결제 요청 직후 — PENDING 상태 저장
-        PaymentLogEntity pendingLog = PaymentLogEntity.builder()
-                .order(OrderEntity.builder().id(dbOrderId).build())
-                .transactionId(mockResponse.getTransactionId())
-                .amount(amount)
-                .status(mockResponse.getStatus()) // 항상 "PENDING" -> 비동기로 "SUCCESS" / "FAILED" 업데이트됨.
-                .message(mockResponse.getMessage())
-                .createdAt(LocalDateTime.now())
-                .build();
+			// 3️. 응답 검증 (null 응답 방지)
+			if (mockResponse == null || mockResponse.getStatus() == null) {
+				throw new PaymentException(PaymentErrorCode.MOCK_API_RESPONSE_NULL);
+			}
 
-        // DB결제이력 저장
-        paymentLogRepository.save(pendingLog);
+		} catch (Exception e) {
+			// 4️. 네트워크, 직렬화, 내부 오류 발생 시 예외 처리
+			log.error("[PaymentService] 결제 요청 실패 - orderId={}, error={}", orderId, e.getMessage());
+			throw new PaymentException(PaymentErrorCode.MOCK_PAYMENT_FAILED);
+		}
+		
+		// 5. DB에서 주문 엔티티 조회 (mockOrderId 기반)
+		OrderEntity orderEntity = orderRepository.findByMockOrderId(orderId)
+				.orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_LOG_NOT_FOUND));
 
-        return PaymentResultDto.OrderResultResponse.builder()
-                .status(mockResponse.getStatus())
-                .transactionId(mockResponse.getTransactionId())
-                .message(mockResponse.getMessage())
-                .build();
-    }
+		// 6. 결제 로그 저장
+		PaymentLogEntity pendingLog = PaymentLogEntity.builder()
+		 		.order(orderEntity) // FK 연결! (이거 빠지면 order_id null)
+				.transactionId(mockResponse.getTransactionId())
+				.amount(amount)
+				.status(mockResponse.getStatus())
+				.message(mockResponse.getMessage())
+				.createdAt(LocalDateTime.now())
+				.build();
+
+		paymentLogRepository.save(pendingLog);
+
+		// 76. 결제 결과 반환
+		return PaymentResultDto.OrderResultResponse.builder()
+				.status(mockResponse.getStatus())
+				.transactionId(mockResponse.getTransactionId())
+				.message(mockResponse.getMessage())
+				.build();
+	}
 
 	/**
 	 * 3. 결제 결과 조회 및 DB 상태 업데이트
@@ -131,93 +156,93 @@ public class PaymentService {
 	 *   그 결과를 DB(Order, PaymentLog)에 동기화한다.
 	 */
 	@Transactional
-	public PaymentResultDto.OrderResultResponse checkPaymentResult(Long orderId) {
+	public PaymentResultDto.OrderResultResponse checkPaymentResult(String orderId) {
 		// 1. Mock API 호출 (현재 결제 상태 조회)
-		MockApiPaymentDto.MockPayResponse mockRes = webClient.get()
+		MockApiPaymentDto.MockPayResponse mockResponse = webClient.get()
 				.uri("/api/mock/payment/result/{orderId}", orderId)
 				.retrieve()
 				.bodyToMono(MockApiPaymentDto.MockPayResponse.class)
 				.block();
 
-		if (mockRes == null || mockRes.getStatus() == null) {
-			throw new BusinessException("Mock 결제 상태 조회에 실패했습니다. (orderId=" + orderId + ")");
+		if (mockResponse == null || mockResponse.getStatus() == null) {
+			throw new PaymentException(PaymentErrorCode.MOCK_API_RESPONSE_NULL);
 		}
 
-		// 2. 최신 결제 로그 조회
-		PaymentLogEntity latestLog = paymentLogRepository.findLatestByOrderId(orderId)
-				.orElseThrow(() -> new BusinessException("결제 로그가 존재하지 않습니다. (orderId=" + orderId + ")"));
+		 // 2. mockOrderId 기반으로 주문 조회
+		OrderEntity orderEntity = orderRepository.findByMockOrderId(orderId)
+				.orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_LOG_NOT_FOUND));
 
-		// 3. 주문 엔티티 조회
+		// 3. 최신 결제 로그 조회 (OrderEntity 기반)
+		PaymentLogEntity latestLog = paymentLogRepository.findLatestByOrderId(orderEntity.getId())
+				.orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_LOG_NOT_FOUND));
+
+		// 4. 주문 엔티티 조회
 		OrderEntity order = latestLog.getOrder();
 
-		// 4. Mock 응답 상태를 DB에 동기화
-		latestLog.setStatus(mockRes.getStatus());
-		latestLog.setMessage(mockRes.getMessage());
+		// 5. Mock 응답 상태를 DB에 동기화
+		latestLog.setStatus(mockResponse.getStatus());
+		latestLog.setMessage(mockResponse.getMessage());
 		latestLog.setUpdateAt(LocalDateTime.now());
 
-		switch (mockRes.getStatus().toUpperCase()) {
+		switch (mockResponse.getStatus().toUpperCase()) {
 			case "SUCCESS" -> order.updateStatus(OrderStatus.SUCCESS);
 			case "FAILED" -> order.updateStatus(OrderStatus.FAILED);
 			default -> order.updateStatus(OrderStatus.PENDING);
 		}
 
-		// 5. 저장 (로그 + 주문 상태 동기화)
+		// 6. 저장 (로그 + 주문 상태 동기화)
 		paymentLogRepository.save(latestLog);
 
-		// 6. 결과 DTO 반환
+		// 7. 결과 DTO 반환
 		return PaymentResultDto.OrderResultResponse.builder()
-				.status(mockRes.getStatus())
-				.transactionId(mockRes.getTransactionId())
-				.message(mockRes.getMessage())
-				.build();
-	}
-
-    /** 4. 주문 취소 */
-	@Transactional
-	public PaymentResultDto.OrderCancelResponse cancelOrder(String orderId) {
-		// 1. Mock ID → DB용 Long ID 변환
-		Long dbOrderId = MockIdUtil.toEntityId(orderId);
-
-		// 2. 기존 결제 금액 조회 (가장 최근 결제 로그)
-		PaymentLogEntity lastLog = paymentLogRepository
-				.findLatestByOrderId(dbOrderId) // Long으로 변환
-				.orElseThrow(() -> new BusinessException("해당 주문의 결제 내역을 찾을 수 없습니다."));
-
-		// 3. Mock API에 취소 요청
-		MockApiCancelDto.MockCancelRequest mockRequest = new MockApiCancelDto.MockCancelRequest(orderId);
-		MockApiCancelDto.MockCancelResponse mockResponse = webClient.post()
-				.uri("/api/mock/order/cancel")
-				.bodyValue(mockRequest)
-				.retrieve()
-				.bodyToMono(MockApiCancelDto.MockCancelResponse.class)
-				.block();
-
-		if (mockResponse == null || mockResponse.getStatus() == null) {
-			throw new BusinessException("Mock 주문 취소 API 응답이 유효하지 않습니다.");
-		}
-
-		// 4. 취소 로그 저장 — 기존 결제 금액 그대로 유지
-		PaymentLogEntity cancelLog = PaymentLogEntity.builder()
-				.order(lastLog.getOrder()) // FK 그대로 유지
-				.transactionId("CANCEL-" + orderId)
-				.amount(lastLog.getAmount())
-				.status(mockResponse.getStatus()) // "CANCELED"
-				.message(mockResponse.getMessage())
-				.createdAt(LocalDateTime.now())
-				.build();
-
-		paymentLogRepository.save(cancelLog);
-
-		// 5. 주문 상태도 동기화 (OrderEntity에 반영)
-		OrderEntity order = lastLog.getOrder();
-		order.updateStatus(OrderStatus.CANCELED);
-
-		// 6. 응답 DTO 반환
-		return PaymentResultDto.OrderCancelResponse.builder()
 				.status(mockResponse.getStatus())
+				.transactionId(mockResponse.getTransactionId())
 				.message(mockResponse.getMessage())
 				.build();
 	}
 
+    @Transactional
+    public PaymentResultDto.OrderCancelResponse cancelOrder(String orderId) {
+        // 1. mockOrderId 기반 주문 조회
+        OrderEntity orderEntity = orderRepository.findByMockOrderId(orderId)
+                .orElseThrow(() -> new PaymentException(PaymentErrorCode.ORDER_NOT_FOUND));
+
+        // 2. 최신 결제 로그 조회
+        PaymentLogEntity lastLog = paymentLogRepository.findLatestByOrderId(orderEntity.getId())
+                .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_LOG_NOT_FOUND));
+
+        // 3. Mock API 취소 요청
+        MockApiCancelDto.MockCancelRequest mockRequest = new MockApiCancelDto.MockCancelRequest(orderId);
+        MockApiCancelDto.MockCancelResponse mockResponse = webClient.post()
+                .uri("/api/mock/order/cancel")
+                .bodyValue(mockRequest)
+                .retrieve()
+                .bodyToMono(MockApiCancelDto.MockCancelResponse.class)
+                .block();
+
+        if (mockResponse == null || mockResponse.getStatus() == null) {
+            throw new PaymentException(PaymentErrorCode.CANCEL_API_FAILED);
+        }
+
+        // 4. 취소 로그 저장
+        PaymentLogEntity cancelLog = PaymentLogEntity.builder()
+                .order(orderEntity)
+                .transactionId("CANCEL-" + orderId + "-" + System.currentTimeMillis())
+                .amount(lastLog.getAmount())
+                .status(mockResponse.getStatus())
+                .message(mockResponse.getMessage())
+                .createdAt(LocalDateTime.now())
+                .build();
+        paymentLogRepository.save(cancelLog);
+
+        // 5. 주문 상태 반영
+        orderEntity.updateStatus(OrderStatus.CANCELED);
+
+        // 6. 결과 반환
+        return PaymentResultDto.OrderCancelResponse.builder()
+                .status(mockResponse.getStatus())
+                .message(mockResponse.getMessage())
+                .build();
+    }
 
 }

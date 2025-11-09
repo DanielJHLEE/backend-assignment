@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,7 +27,10 @@ import lombok.Setter;
  * - 주문 ID, 트랜잭션 ID, 결제 금액, 상태, 메시지, 요청 시간 포함
  */
 @Entity
-@Table(name = "payment_log")
+@Table( // 같은 결제건이 두 번 저장되는 걸 방지, 추후 중복방지 고려해서
+  name = "payment_log",
+  uniqueConstraints = @UniqueConstraint(columnNames = {"order_id", "transaction_id"})
+)
 @Getter
 @Setter
 @NoArgsConstructor

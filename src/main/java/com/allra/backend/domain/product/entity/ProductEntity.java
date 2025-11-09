@@ -42,7 +42,7 @@ public class ProductEntity {
 
     public void validateStock(int requestedQty) {
         if (this.stock < requestedQty) {
-            throw new BusinessException("상품 재고가 부족합니다.");
+            throw new BusinessException("재고가 부족한 상품이 포함되어 있어 주문을 생성할 수 없습니다. (" + this.name + ")");
         }
     }
 }

@@ -1,7 +1,10 @@
 package com.allra.backend.domain.order.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
 import com.allra.backend.domain.order.entity.OrderEntity;
 
 /**
@@ -19,6 +22,9 @@ import com.allra.backend.domain.order.entity.OrderEntity;
  */
 @Repository
 public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
+
+    // Mock API용 문자열 주문번호로 조회
+    Optional<OrderEntity> findByMockOrderId(String mockOrderId);
 
     // 예시) 특정 사용자의 주문 목록 조회 (필요시 사용)
     // List<OrderEntity> findByUserId(Long userId);

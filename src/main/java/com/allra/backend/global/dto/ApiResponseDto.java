@@ -62,4 +62,14 @@ public class ApiResponseDto<T> {
                 .message(message)
                 .build();
     }
+
+    
+    // 결제 예외용 (PaymentErrorCode 기반)
+    public static <T> ApiResponseDto<T> error(String errorCode, String message) {
+        return ApiResponseDto.<T>builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .message(String.format("[%s] %s", errorCode, message))
+                .build();
+    }
+    
 }

@@ -61,67 +61,78 @@ public final class SwaggerTags {
 
 
     /* ==========================================================
-     * 🛒 장바구니 API
-     * ========================================================== */
+    * 🛒 장바구니 API
+    * ========================================================== */
     public static final String CART_NAME = "🛒 장바구니 API";
     public static final String CART_DESC =
-            "<b>사용자별 장바구니 조회 관련 API</b><br>" +
-            "특정 사용자<b>(userId)</b>를 기준으로 장바구니 목록 및 상품 상세 정보를 제공합니다.<br>" +
+            "<b>사용자별 장바구니 관리 API</b><br>" +
+            "특정 사용자(<b>userId</b>)를 기준으로 장바구니를 조회, 추가, 수정, 삭제할 수 있습니다.<br>" +
+            "장바구니는 <b>주문 전 임시 저장소</b>로, <b>재고와 무관하게</b> 상품을 담을 수 있습니다.<br>" +
             "더미 데이터: <b>16개</b>";
 
     public static final String CART_GET_ALL_DESC = """
         🧾 <b>사용자 장바구니 목록 조회</b><br>
-        특정 사용자(userId)의 장바구니 정보를 조회합니다.<br>
-        각 상품의 품절 상태(<code>soldOut</code>), 수량(<code>quantity</code>) 정보를 함께 제공합니다.<br>
-        반환 형식: <code>ApiResponseDto&lt;List&lt;CartResponseDto&gt;&gt;</code>
+        특정 사용자(<code>userId</code>)의 장바구니 전체 목록을 조회합니다.<br>
+        각 장바구니에는 담긴 상품의 수량(<code>quantity</code>), 품절 여부(<code>soldOut</code>), 가격 정보가 포함됩니다.<br><br>
+        ✅ <b>요청 예시</b>: <code>GET /api/users/1/carts</code><br>
+        ✅ <b>응답 형식</b>: <code>ApiResponseDto&lt;List&lt;UserCartResponseDto&gt;&gt;</code>
         """;
 
     public static final String CART_GET_DETAIL_DESC = """
         📋 <b>장바구니 상세 조회</b><br>
-        특정 장바구니(cartId)의 상세 정보를 조회합니다.<br>
-        장바구니 <b>ID</b>에 해당하는 상품 리스트를 반환합니다.<br>
-        반환 형식: <code>ApiResponseDto&lt;List&lt;CartsIdDetailResponseDto&gt;&gt;</code>
+        특정 장바구니(<code>cartId</code>)의 상세 정보를 조회합니다.<br>
+        해당 장바구니에 담긴 상품 리스트를 모두 반환합니다.<br><br>
+        ✅ <b>요청 예시</b>: <code>GET /api/users/1/carts/2</code><br>
+        ✅ <b>응답 형식</b>: <code>ApiResponseDto&lt;List&lt;CartsIdDetailResponseDto&gt;&gt;</code>
         """;
 
     public static final String CART_GET_ITEM_DETAIL_DESC = """
         📦 <b>장바구니 아이템 상세 조회</b><br>
-        장바구니 내 개별 상품(cartItemId)을 기준으로 정보를 조회합니다.<br>
-        <b>상품명</b>, <b>브랜드</b>, <b>가격</b>, <b>품절 여부</b>, <b>수량</b> 등의 상세 정보를 제공합니다.<br>
-        반환 형식: <code>ApiResponseDto&lt;CartItemsDetailResponseDto&gt;</code>
+        장바구니 내 개별 상품(<code>cartItemId</code>)을 기준으로 상세 정보를 조회합니다.<br>
+        상품명, 브랜드, 가격, 품절 여부, 수량 등의 정보를 제공합니다.<br><br>
+        ✅ <b>요청 예시</b>: <code>GET /api/users/1/carts/2/items/5</code><br>
+        ✅ <b>응답 형식</b>: <code>ApiResponseDto&lt;CartItemsDetailResponseDto&gt;</code>
         """;
 
     public static final String CART_POST_ADD_ITEM_DESC = """
         ➕ <b>상품을 장바구니에 추가</b><br>
-        사용자의 장바구니에 상품을 추가하거나, 이미 존재하는 상품의 수량을 증가시킵니다.<br><br>
+        사용자의 장바구니에 상품을 추가합니다.<br>
+        - 장바구니가 없으면 자동으로 생성됩니다.<br>
+        - 동일한 상품이 이미 존재할 경우 수량이 <code>+1</code> 증가합니다.<br>
+        - 품절(<code>soldOut</code>) 또는 재고(<code>stock</code>) 여부와 관계없이 담을 수 있습니다.<br><br>
+
         ✅ <b>요청 예시</b>:<br>
         <pre>{
-            "userId" : 23
+            "userId": 1,
             "productId": 1001
         }</pre>
-        ✅ <b>응답 형식</b>: <code>ApiResponseDto&lt;AddCartItemsResponseDto&gt;</code><br><br>
-        성공 시 <code>201 Created</code> 반환.
+        ✅ <b>응답 형식</b>: <code>ApiResponseDto&lt;AddCartItemsResponseDto&gt;</code><br>
+        성공 시 <code>200 OK</code> 반환.
         """;
 
     public static final String CART_PATCH_UPDATE_ITEM_DESC = """
         🔄 <b>장바구니 상품 수량 수정</b><br>
-        기존 장바구니에 담긴 상품의 수량을 변경합니다.<br><br>
+        장바구니에 담긴 상품의 수량을 변경합니다.<br>
+        - 존재하지 않는 상품일 경우 <code>BusinessException</code> 발생<br>
+        - 수량은 1 이상만 허용됩니다.<br><br>
+
         ✅ <b>요청 예시</b>:<br>
         <pre>{
             "quantity": 3
         }</pre>
-        ✅ <b>응답 형식</b>: <code>ApiResponseDto&lt;UpdateCartItemResponseDto&gt;</code><br><br>
+        ✅ <b>응답 형식</b>: <code>ApiResponseDto&lt;UpdateCartItemResponseDto&gt;</code><br>
         성공 시 <code>200 OK</code> 반환.
         """;
 
     public static final String CART_DELETE_ITEM_DESC = """
-        ❌ <b>장바구니 아이템 삭제</b><br>
-        특정 장바구니(<b>cartId</b>) 내 개별 상품(<b>cartItemId</b>)을 삭제합니다.<br><br>
-        ✅ <b>요청 예시</b>:<br>
-        <code>DELETE /api/users/1/carts/2/items/5</code><br><br>
+        ❌ <b>장바구니 상품 삭제</b><br>
+        특정 장바구니(<code>cartId</code>) 내에서 개별 상품(<code>cartItemId</code>)을 삭제합니다.<br>
+        삭제 후 남은 아이템이 없을 경우에도 장바구니는 유지됩니다.<br><br>
+        ✅ <b>요청 예시</b>: <code>DELETE /api/users/1/carts/2/items/5</code><br>
         ✅ <b>응답 예시</b>:<br>
         <pre>{
             "status": "OK",
-            "message": "장바구니 상품이 삭제되었습니다.",
+            "message": "상품이 장바구니에서 삭제되었습니다.",
             "data": null
         }</pre>
         성공 시 <code>200 OK</code> 반환.
@@ -129,82 +140,132 @@ public final class SwaggerTags {
 
     public static final String CART_DELETE_CART_DESC = """
         🗑️ <b>전체 장바구니 삭제</b><br>
-        특정 사용자(<b>userId</b>)의 장바구니 전체를 삭제합니다.<br><br>
-        ✅ <b>요청 예시</b>:<br>
-        <code>DELETE /api/users/1/carts/2</code><br><br>
+        특정 사용자(<code>userId</code>)의 장바구니 전체를 삭제합니다.<br>
+        장바구니에 담긴 모든 상품이 함께 삭제됩니다.<br><br>
+        ✅ <b>요청 예시</b>: <code>DELETE /api/users/1/carts/2</code><br>
         ✅ <b>응답 예시</b>:<br>
         <pre>{
             "status": "OK",
-            "message": "장바구니가 전체 삭제되었습니다.",
+            "message": "장바구니가 모두 비워졌습니다.",
             "data": null
         }</pre>
         성공 시 <code>200 OK</code> 반환.
         """;
 
+
     /* ==========================================================
-     * 🧾 주문 & 결제 API
-     * ========================================================== */
+    * 🧾 주문 & 결제 API
+    * ========================================================== */
     public static final String ORDER_NAME = "🧾 주문 / 결제 API";
-    public static final String ORDER_DESC =
-            "<b>주문 생성 → 결제 요청 → 결제 결과 조회 → 주문 취소</b>까지의 전체 결제 프로세스를 관리합니다.<br>" +
-            "모든 결제 관련 동작은 <b>Mock 결제 API</b>를 통해 시뮬레이션되며,<br>" +
-            "결제 상태 전환 (PENDING → SUCCESS / FAILED)</b>을 모사합니다.<br><br>" +
-            "전체 Flow:<br>" +
-            "1️⃣ <b>주문 생성</b> → 2️⃣ <b>결제 요청</b> → 3️⃣ <b>결제 결과 조회</b> → 4️⃣ <b>주문 취소</b>";
+    public static final String ORDER_DESC = """
+        <b>주문 생성 → 결제 요청 → 결제 결과 조회 → 주문 취소</b>까지의 전체 결제 프로세스를 관리합니다.<br><br>
+        모든 결제 및 주문 동작은 <b>Mock 결제 API</b>를 통해 시뮬레이션되며,<br>
+        각 단계별 상태 전환 (<code>CREATED → PENDING → SUCCESS / FAILED → CANCELED</code>) 을 테스트할 수 있습니다.<br><br>
+
+        ⚙️ <b>사전 조건 (Pre-condition)</b><br>
+        • 주문을 생성하기 전, 사용자는 반드시 장바구니에 상품을 추가해야 합니다.<br>
+        • 장바구니에 담긴 상품 정보를 기반으로 주문이 생성됩니다.<br>
+        • 장바구니 내 상품이 없을 경우 주문 생성이 불가합니다.<br><br>
+
+        🔁 <b>전체 Flow</b><br>
+        1️⃣ 장바구니 추가 (<code>CartService.addProductsToCart()</code>)<br>
+        2️⃣ 주문 생성 (<code>OrderService.createOrder()</code>)<br>
+        3️⃣ 결제 요청 (<code>PaymentService.processPayment()</code>)<br>
+        4️⃣ 결제 결과 조회 (<code>PaymentService.checkPaymentResult()</code>)<br>
+        5️⃣ 주문 취소 (<code>PaymentService.cancelOrder()</code>)
+        """;
 
     public static final String ORDER_CREATE_DESC = """
-        🧾 <b>주문 생성</b><br>
-        사용자의 장바구니를 기반으로 주문을 생성합니다.<br>
-        - 장바구니 상품 수량/재고 검증<br>
-        - 주문 총액 계산 및 DB 저장<br>
-        - Mock API 호출로 주문번호 생성 (CREATED 상태)<br><br>
+        🧾 <b>주문 생성 (Create Order)</b><br>
+        사용자의 장바구니를 기반으로 주문을 생성합니다.<br><br>
+
+        ⚙️ <b>처리 절차</b><br>
+        • 사용자 ID(<code>userId</code>) 기준으로 장바구니 조회<br>
+        • 장바구니가 비어 있으면 <code>400 Bad Request</code> 반환<br>
+        • 상품 재고 검증 및 총 결제 금액 계산<br>
+        • Mock API에 주문 생성 요청 (<code>/api/mock/order</code>)<br>
+        • Mock 응답의 주문번호(<code>orderId</code>)를 DB에 저장하고 상태는 <code>CREATED</code><br>
+        • PaymentLog에도 동일 내역 기록<br><br>
+
+        ⚠️ <b>사전 조건 (Pre-condition)</b><br>
+        • 사용자는 최소 1개 이상의 상품을 장바구니에 담아야 합니다.<br>
+        • <b>장바구니 내 상품 중 하나라도 재고가 부족하면 주문 생성이 거부됩니다.</b><br><br>
+
         ✅ <b>요청 예시</b>: <code>POST /api/orders/{userId}</code><br>
-        ✅ <b>응답 예시</b>: <pre>{
-            "orderId": "ORD_20251109_123456",
-            "status": "CREATED",
-            "message": "Order created successfully"
+        ✅ <b>응답 예시</b>:<pre>{
+        "orderId": "ORD_20251109_123456",
+        "status": "CREATED",
+        "message": "Order created successfully"
         }</pre>
         """;
 
     public static final String ORDER_PAYMENT_REQUEST_DESC = """
-        💳 <b>결제 요청</b><br>
-        생성된 주문 ID를 기반으로 결제를 시도합니다.<br>
-        - Mock 결제 API 호출<br>
-        - 최초 응답은 항상 <code>PENDING</code><br>
-        - Mock 내부에서 8초 후 자동으로 SUCCESS / FAILED 상태로 전환<br><br>
+        💳 <b>결제 요청 (Request Payment)</b><br>
+        생성된 주문 ID를 기반으로 결제를 요청합니다.<br><br>
+
+        ⚙️ <b>처리 절차</b><br>
+        • Mock 결제 API(<code>/api/mock/payment</code>) 호출<br>
+        • 유효하지 않은 주문번호 또는 금액이 0 이하일 경우 즉시 <code>FAILED</code><br>
+        • 정상 요청은 <code>PENDING</code> 상태로 저장되고,<br>
+        내부 Mock 스레드에서 약 8~15초 후 <code>SUCCESS</code> 또는 <code>FAILED</code> 로 자동 전환<br>
+        • 모든 요청/응답 내역은 <code>PaymentLogEntity</code>에 기록됩니다.<br><br>
+
+        ⚠️ <b>사전 조건</b><br>
+        • 주문 상태가 <code>CREATED</code> 여야 결제 요청이 가능합니다.<br><br>
+
         ✅ <b>요청 예시</b>: <code>POST /api/orders/{orderId}/payment</code><br>
-        ✅ <b>응답 예시</b>: <pre>{
-            "status": "PENDING",
-            "transactionId": "txn_12345678",
-            "message": "Payment request received. Processing..."
+        ✅ <b>응답 예시</b>:<pre>{
+        "status": "PENDING",
+        "transactionId": "txn_12345678",
+        "message": "Payment request received. Processing..."
         }</pre>
         """;
 
     public static final String ORDER_PAYMENT_RESULT_DESC = """
-        🔄 <b>결제 결과 조회</b><br>
-        Mock 결제 API로부터 현재 결제 상태를 조회합니다.<br>
-        - 내부적으로 Mock 서버의 <code>paymentStatusMap</code> 상태를 확인<br>
-        - PENDING → SUCCESS / FAILED 로 전환된 결과를 DB(Order + PaymentLog)에 동기화<br><br>
+        🔄 <b>결제 결과 조회 (Check Payment Result)</b><br>
+        Mock 결제 API에서 현재 결제 상태를 조회하고 DB 상태를 동기화합니다.<br><br>
+
+        ⚙️ <b>처리 절차</b><br>
+        • Mock API(<code>/api/mock/payment/result/{orderId}</code>)를 호출<br>
+        • 최신 결제 상태를 조회 후 <code>PaymentLog</code>와 <code>Order</code>의 상태를 업데이트<br>
+        • 상태별 동작:<br>
+        └ <code>SUCCESS</code> → 주문 확정<br>
+        └ <code>FAILED</code> → 주문 실패<br>
+        └ <code>PENDING</code> → 결제 진행 중<br><br>
+
+        ⚠️ <b>사전 조건</b><br>
+        • 결제 요청(PENDING)이 선행되어야 합니다.<br><br>
+
         ✅ <b>요청 예시</b>: <code>GET /api/orders/{orderId}/payment/result</code><br>
-        ✅ <b>응답 예시</b>: <pre>{
-            "status": "SUCCESS",
-            "transactionId": "txn_abc123",
-            "message": "Payment completed successfully"
+        ✅ <b>응답 예시</b>:<pre>{
+        "status": "SUCCESS",
+        "transactionId": "txn_abc123",
+        "message": "Payment completed successfully"
         }</pre>
         """;
 
     public static final String ORDER_CANCEL_DESC = """
-        ❌ <b>주문 취소</b><br>
-        특정 주문을 취소하고, 결제 로그에 <b>CANCELED</b> 상태로 기록합니다.<br>
-        - Mock API 호출로 즉시 CANCELED 상태 반환<br>
-        - 기존 결제 금액 그대로 유지<br>
-        - OrderEntity 상태도 CANCELED 로 동기화<br><br>
+        ❌ <b>주문 취소 (Cancel Order)</b><br>
+        특정 주문을 취소하고, 결제 로그에 <code>CANCELED</code> 상태를 기록합니다.<br><br>
+
+        ⚙️ <b>처리 절차</b><br>
+        • Mock API(<code>/api/mock/order/cancel</code>) 호출<br>
+        • 현재 결제 상태에 따라 취소 가능 여부를 판별<br>
+        └ <code>PENDING / SUCCESS</code> → 취소 가능<br>
+        └ <code>FAILED</code> → 취소 불가<br>
+        • 취소 성공 시 PaymentLog에 <code>CANCELED</code> 로그 추가<br>
+        • OrderEntity 상태를 <code>CANCELED</code> 로 동기화<br><br>
+
+        ⚠️ <b>사전 조건</b><br>
+        • 주문은 결제 완료(SUCCESS) 또는 진행 중(PENDING) 상태여야 취소 가능<br><br>
+
         ✅ <b>요청 예시</b>: <code>POST /api/orders/{orderId}/cancel</code><br>
-        ✅ <b>응답 예시</b>: <pre>{
-            "status": "CANCELED",
-            "message": "Order canceled successfully"
+        ✅ <b>응답 예시</b>:<pre>{
+        "status": "CANCELED",
+        "message": "Order canceled successfully"
         }</pre>
         """;
+
 
 
     /* ==========================================================
@@ -387,4 +448,40 @@ public final class SwaggerTags {
       "message": "OrderId=ORD_20251110_003247_171169 not found. Cancel request ignored."
     }</pre>
     """;
+
+    /* ==========================================================
+    * 💳 결제 로그 / 히스토리 API
+    * ========================================================== */
+    public static final String PAYMENT_NAME = "💳 결제 로그 / 히스토리 API";
+    public static final String PAYMENT_DESC =
+            "<b>주문별 결제 이력(PaymentLogEntity)</b>을 조회하기 위한 API입니다.<br>" +
+            "각 주문(<code>orderId</code>)을 기준으로 결제 요청, 성공, 실패, 취소 등 전체 로그를 시간 순서대로 반환합니다.<br><br>" +
+            "이 API는 결제 진행 로직(OrderController → PaymentService)과는 별도로,<br>" +
+            "<b>운영자 또는 개발자 테스트용</b>으로 결제 상태 추적에 활용됩니다.<br><br>" +
+            "✅ <b>예시 흐름</b>:<br>" +
+            "1️⃣ 주문 생성 → 2️⃣ 결제 요청 → 3️⃣ 결제 결과 확인 → 4️⃣ 취소 → 5️⃣ <b>결제 이력 조회</b>";
+
+    public static final String PAYMENT_GET_HISTORY_DESC = """
+        🧾 <b>주문별 결제 로그 조회</b><br>
+        특정 주문(<code>orderId</code>)에 대한 전체 결제 이력을 반환합니다.<br>
+        각 로그에는 <b>status</b>, <b>transactionId</b>, <b>message</b>, <b>createdAt</b> 정보가 포함됩니다.<br><br>
+        ✅ <b>요청 예시</b>: <code>GET /api/payments/{orderId}/logs</code><br>
+        ✅ <b>응답 예시</b>: <pre>[
+            {
+                "order": { "id": 1001 },
+                "transactionId": "ORD_20251110_003247_171169",
+                "status": "CREATED",
+                "message": "Order created successfully",
+                "createdAt": "2025-11-10T14:00:00"
+            },
+            {
+                "order": { "id": 1001 },
+                "transactionId": "txn_5f3a6b82",
+                "status": "SUCCESS",
+                "message": "Payment completed successfully",
+                "createdAt": "2025-11-10T14:05:00"
+            }
+        ]</pre><br>
+        반환 형식: <code>ApiResponseDto&lt;List&lt;PaymentLogEntity&gt;&gt;</code>
+        """;
 }

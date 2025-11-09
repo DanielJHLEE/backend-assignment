@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.allra.backend.domain.user.entity.UserEntity;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -32,6 +33,10 @@ public class OrderEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
+
+    /** Mock API용 주문번호 (ORD_20251110_053149_194252 형식) */
+    @Column(name = "mock_order_id", unique = true)
+    private String mockOrderId;
 
     /** 총 주문 금액 */
     @Column(name = "total_price", nullable = false)

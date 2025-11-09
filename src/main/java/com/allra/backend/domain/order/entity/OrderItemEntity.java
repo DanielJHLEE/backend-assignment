@@ -1,6 +1,8 @@
 package com.allra.backend.domain.order.entity;
 
 import com.allra.backend.domain.product.entity.ProductEntity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.*;
 import lombok.*;
 

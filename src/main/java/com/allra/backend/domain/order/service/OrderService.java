@@ -19,7 +19,6 @@ import com.allra.backend.domain.user.entity.UserEntity;
 import com.allra.backend.domain.order.repository.OrderRepository;
 
 import com.allra.backend.global.exception.BusinessException;
-import com.allra.backend.global.util.MockIdUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -118,11 +117,8 @@ public class OrderService {
      */
     @Transactional
     public PaymentResultDto.OrderResultResponse processPayment(String orderId) {
-        // 1.cartService MockIdUtil로 변환 (String → Long)
-        Long dbOrderId = MockIdUtil.toEntityId(orderId);
-
-        // 2. 주문 조회
-        OrderEntity order = orderRepository.findById(dbOrderId)
+        // 1. 주문 조회
+        OrderEntity order = orderRepository.findByMockOrderId(orderId)
                 .orElseThrow(() -> new BusinessException("해당 주문을 찾을 수 없습니다."));
 
         // 3. 결제 금액 조회
@@ -137,7 +133,8 @@ public class OrderService {
 
         switch (status) {
             case "SUCCESS" -> handleSuccess(order);   // 재고 차감 + 장바구니 비움
-            case "FAILED", "CANCELED" -> handleRollback(order); // 재고 복원
+            case "FAILED" -> handleRollback(order, OrderStatus.FAILED); // 재고 복원
+            case "CANCELED" -> handleRollback(order, OrderStatus.CANCELED);
             default -> order.updateStatus(OrderStatus.PENDING);
         }
 
@@ -168,18 +165,18 @@ public class OrderService {
     }
 
     /** 2-2 결제 실패 / 취소 시 : 재고 복원 */
-    private void handleRollback(OrderEntity order) {
+    private void handleRollback(OrderEntity order, OrderStatus newStatus) {
         for (OrderItemEntity item : order.getItems()) {
             ProductEntity product = item.getProduct();
             product.setStock(product.getStock() + item.getQuantity());
             product.setSoldOut(false);
         }
 
-        order.updateStatus(OrderStatus.FAILED);
+        order.updateStatus(newStatus); // FAILED or CANCELED 구분해서 반영
     }
 
     /** 3. 결제 결과 조회 */
-    public PaymentResultDto.OrderResultResponse checkPaymentResult(Long orderId) {
+    public PaymentResultDto.OrderResultResponse checkPaymentResult(String orderId) {
         return paymentService.checkPaymentResult(orderId);
     }
 
