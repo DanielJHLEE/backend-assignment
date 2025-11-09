@@ -423,13 +423,54 @@ QueryDSL 기반의 상품 검색(`searchProducts`) 및 상세 조회(`findById`)
 
 ---
 
+## 🤖 AI 사용 안내 (ORDER, PAYMENT, MOCK API주문 및 결제 기능)
+## 🧩 해결하려던 문제
+장바구니 기반으로 주문을 생성하고, Mock 결제 API를 이용해 실제 결제 흐름처럼  
+`PENDING → SUCCESS / FAILED → CANCELED` 상태 전환을 구현해야 했다.  
+또한 결제 로그(`PaymentLogEntity`)와 주문 상태(`OrderEntity`)를 일관되게 동기화하는 구조가 필요했다.
+
+---
+
+## 💬 대화 요약
+
+### Q: 주문 생성부터 결제 요청까지 어떤 구조로 설계해야 하나?  
+**A:** `createOrder()`에서 장바구니 검증 및 총 결제금액 계산 후 Mock 주문 API 호출 →  
+`processPayment()`에서 결제 요청을 수행하고 최초 응답은 `PENDING` 상태로 저장하도록 구현.
+
+---
+
+### Q: Mock 결제 결과가 바뀌면 DB 상태를 어떻게 갱신해야 할까?  
+**A:** `checkPaymentResult()`에서 Mock 서버의 결제 상태를 조회하고  
+`SUCCESS` / `FAILED` 결과에 따라 `OrderEntity` 및 `PaymentLogEntity`를 업데이트하도록 구성.
+
+---
+
+### Q: 결제 로그는 어떤 방식으로 관리하면 좋을까?  
+**A:** `PaymentLogEntity`를 별도 관리 테이블로 두고 주문별 결제 상태 변경 시마다 로그를 저장.  
+`findLatestByOrderId()`로 최신 결제 이력을 조회하고, 상태 변경 시 새 로그를 추가 저장하도록 개선.
+
+---
+
+### Q: 주문 취소 시 기존 결제 금액과 로그는 어떻게 처리해야 하나?  
+**A:** `cancelOrder()` 호출 시 기존 결제 금액(`amount`)을 그대로 유지하고  
+Mock 취소 API(`/api/mock/order/cancel`) 응답을 받아 `CANCELED` 로그를 새로 기록하도록 설계.
+
+---
+
+### Q: Swagger 문서화를 통일성 있게 적용하려면?  
+**A:** `SwaggerTags` 상수를 생성하여 모든 컨트롤러의 `@Tag`, `@Operation`에 공통 적용.  
+예:  
+```java
+@Tag(name = SwaggerTags.ORDER_NAME, description = SwaggerTags.ORDER_DESC)
+@Operation(summary = "결제 요청", description = SwaggerTags.ORDER_PAYMENT_REQUEST_DESC)
+
+
+
 ✔️ **AI 참고 목적:**  
 Service 계층 테스트 구조 검토, 로직 분기 검증 방식 점검,  
 예외 처리 및 검증 로직 통일, Swagger 문서 구성 최적화  
 
 ✔️ **활용 범위:**  
 비즈니스 로직 정리, 테스트 설계 확인, API 문서 정비, RESTful 구조 검증
-
-
 
 > 💬 본 대화 내용은 AI(ChatGPT)를 활용하여 코드 설계, 디버깅, 테스트 개선을 수행한 내역을 정리한 것입니다.
