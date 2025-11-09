@@ -39,4 +39,8 @@ logging:
   level:
     org.springframework.web.servlet.resource.ResourceHttpRequestHandler: off
 
+# 외부 API / Mock API 설정
+webclient:
+  mock-base-url: ${MOCK_BASE_URL:http://localhost:8080}
+
 

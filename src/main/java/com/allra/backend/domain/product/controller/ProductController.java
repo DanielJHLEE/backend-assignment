@@ -1,7 +1,5 @@
 package com.allra.backend.domain.product.controller;
 
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,16 +14,10 @@ import com.allra.backend.domain.product.dto.ProductDto;
 import com.allra.backend.domain.product.service.ProductService;
 import com.allra.backend.global.dto.ApiResponseDto;
 import com.allra.backend.global.dto.PageResponseDto;
-import com.allra.backend.docs.swagger.SwaggerTags;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 /**
  * 📦 Product Controller
