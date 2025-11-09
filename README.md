@@ -2,6 +2,20 @@
 올라 핀테크 백엔드 과제전형
 지원자: 이재홍  
 
+🛠️ **제출 후 수정 안내 (2025-11-10)**  
+- Mock API 구조 및 변수 타입 일부 수정  
+*(기능 변경 없음 — 안정성 및 구조 개선 목적)*  
+
+---
+
+## ⚙️ API 문서 (Swagger)
+- **URL:** http://localhost:8080/swagger-ui/index.html  
+- **설명:** 프로젝트 실행 후 위 주소로 접속하면 Swagger UI에서 전체 API 명세를 확인할 수 있습니다.  
+- **엔드포인트:** `/v3/api-docs`  
+- **라이브러리:** `springdoc-openapi-starter-webmvc-ui:2.8.4`
+
+---
+
 ## 📘 프로젝트 개요  
 이 저장소는 **올라(Allra) 핀테크 백엔드 과제**를 위해 개발된 **Spring Boot 기반 API 서버**입니다.  
 요구된 기능은 RESTful 방식으로 구현되었으며, 계층별 구조(Controller–Service–Repository)와 테스트 코드가 포함되어 있습니다.
