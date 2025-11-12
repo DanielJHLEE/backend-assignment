@@ -1,7 +1,5 @@
 # backend-assignment  
 
----
-
 ## ⚙️ API 문서 (Swagger)
 - **URL:** http://localhost:8080/swagger-ui/index.html  
 - **설명:** 프로젝트 실행 후 위 주소로 접속하면 Swagger UI에서 전체 API 명세를 확인할 수 있습니다.  
