@@ -8,9 +8,14 @@
 
 ---
 
-## 📘 프로젝트 개요  
-이 저장소는 **올라(Allra) 핀테크 백엔드 과제**를 위해 개발된 **Spring Boot 기반 API 서버**입니다.  
-요구된 기능은 RESTful 방식으로 구현되었으며, 계층별 구조(Controller–Service–Repository)와 테스트 코드가 포함되어 있습니다.
+## 📘 프로젝트 개요
+이 프로젝트는 **쇼핑몰 장바구니·주문·결제 흐름**을 구현한  
+Spring Boot 기반의 백엔드 API 서버입니다.
+
+장바구니 관리, 상품 조회, 주문 생성, 결제 처리 기능을  
+RESTful 방식으로 설계했으며,
+
+요구된 기능은 RESTful 방식으로 구현되어있습니다. 계층별 구조(Controller–Service–Repository)와 테스트 코드가 포함되어 있습니다.
 
 ## ⚙️ 프로젝트 구조 정리
 - Spring Boot 루트 기반 빌드 구조 (`build.gradle`, `settings.gradle` 루트 위치)
