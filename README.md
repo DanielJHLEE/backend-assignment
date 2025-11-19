@@ -1,4 +1,4 @@
-# backend-assignment  
+# spring-order-payment-systems  
 
 ## ⚙️ API 문서 (Swagger)
 - **URL:** http://localhost:8080/swagger-ui/index.html  
